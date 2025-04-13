@@ -154,6 +154,20 @@ pub fn search_books(uuid: String, key: String, page: u8, count: u8) -> Result<Va
     Ok(res)
 }
 
+pub fn run_code(uuid: String, code: String) -> Result<Value, String> {
+    let mut _code = get_code(uuid).unwrap();
+    _code = format!("{}\n{}", _code, code);
+    let res = js_eval(_code)?;
+    let res = serde_json::from_str::<Value>(&res).unwrap();
+    if res.is_object() {
+        let obj = res.as_object().unwrap();
+        if obj.contains_key("error") {
+            return Err(obj.get("error").unwrap().to_string());
+        }
+    }
+    Ok(res)
+}
+
 pub fn run_action(uuid: String, action: String) -> Result<Value, String> {
     let mut code = get_code(uuid).unwrap();
     code = format!("{}\n{}()", code, action);
