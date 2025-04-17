@@ -43,7 +43,7 @@ fn get_chapter() {
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
     let res = wk8.get_chapter("3067".to_string(), "126119".to_string());
-    println!("{}", res.unwrap());
+    println!("{:?}", res.unwrap());
 }
 
 #[test]
