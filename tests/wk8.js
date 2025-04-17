@@ -182,8 +182,5 @@ const chapter = ({ bid, cid }) => {
 }
 
 const test = () => {
-  let res = search({
-    key: '国王的求婚',
-  })
-  console.log(JSON.stringify(res, null, 2))
+  console.log(JSON.stringify(__ENVS__, null, 2))
 }

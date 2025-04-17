@@ -67,3 +67,18 @@ fn get_form() {
     let res = wk8.get_form();
     println!("{}", res.unwrap());
 }
+
+#[test]
+fn test() {
+    let code = include_str!("./wk8.js");
+    let mut wk8 = BookCore::new(
+        code.to_string(),
+        Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
+    );
+    wk8.set_envs(HashMap::from_iter(vec![(
+        "name".to_string(),
+        "zsakvo".to_string(),
+    )]));
+    let res = wk8.eval("test();".to_string());
+    println!("{}", res.unwrap());
+}

@@ -25,7 +25,12 @@ impl BookCore {
 
     pub fn eval(&mut self, code: String) -> Result<String, String> {
         let rt = Runtime::new().unwrap();
-        let code = format!("{}\n{}", self.code, code);
+        let code = format!(
+            "const __ENVS__ = {};{}\n{}",
+            serde_json::to_string(&self.env).unwrap(),
+            self.code,
+            code
+        );
         rt.block_on(async {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
