@@ -9,14 +9,12 @@ use crate::runtime::init_runtime;
 pub struct BookCore {
     pub code: String,
     pub context: Context,
-    pub env: HashMap<String, String>,
 }
 
 impl BookCore {
     pub fn new(code: String, env: Option<HashMap<String, String>>) -> Self {
         let mut core = Self {
             code,
-            env: env.unwrap_or_default(),
             context: Context::default(),
         };
         init_runtime(&mut core);
@@ -25,12 +23,7 @@ impl BookCore {
 
     pub fn eval(&mut self, code: String) -> Result<String, String> {
         let rt = Runtime::new().unwrap();
-        let code = format!(
-            "const __ENVS__ = {};{}\n{}",
-            serde_json::to_string(&self.env).unwrap(),
-            self.code,
-            code
-        );
+        let code = format!("{}\n{}", self.code, code);
         rt.block_on(async {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
@@ -45,16 +38,22 @@ impl BookCore {
         })
     }
 
-    pub fn set_envs(&mut self, env: HashMap<String, String>) {
-        self.env.extend(env);
+    pub fn set_envs(&mut self, env: HashMap<String, Value>) -> Result<Value, String> {
+        let res = self.eval(format!("__ENVS__.setValues({:?})", env))?;
+        let res = serde_json::from_str::<Value>(&res)
+            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
+        Ok(res)
     }
 
-    pub fn get_envs(&self) -> HashMap<String, String> {
-        self.env.clone()
+    pub fn get_envs(&mut self) -> Result<Value, String> {
+        let res = self.eval("__ENVS__.envs".to_string())?;
+        let res = serde_json::from_str::<Value>(&res)
+            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
+        Ok(res)
     }
 
     pub fn clear_envs(&mut self) {
-        self.env.clear();
+        // self.env.clear();
     }
 
     pub fn get_metadata(&mut self) -> Result<String, String> {

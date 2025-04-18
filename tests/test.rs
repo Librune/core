@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use book_core::BookCore;
+use serde_json::json;
 
 #[test]
 fn search_books() {
@@ -69,16 +70,19 @@ fn get_form() {
 }
 
 #[test]
-fn test() {
+fn test_envs() {
     let code = include_str!("./wk8.js");
     let mut wk8 = BookCore::new(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
-    wk8.set_envs(HashMap::from_iter(vec![(
-        "name".to_string(),
-        "zsakvo".to_string(),
-    )]));
-    let res = wk8.eval("test();".to_string());
+    let res = wk8.eval("console.log(__ENVS__);".to_string());
     println!("{}", res.unwrap());
+    // wk8.set_envs(HashMap::from_iter(vec![(
+    //     "name".to_string(),
+    //     json!("zsakvo"),
+    // )]))
+    // .unwrap();
+    // let res = wk8.get_envs();
+    // println!("{}", res.unwrap());
 }
