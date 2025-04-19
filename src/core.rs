@@ -37,7 +37,6 @@ impl BookCore {
     pub fn eval(&mut self, code: String) -> Result<String, String> {
         let rt = Runtime::new().unwrap();
         let code = format!("{}", code);
-        println!("{}", code);
         rt.block_on(async {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
