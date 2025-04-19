@@ -7,4 +7,5 @@ mod request;
 mod runtime;
 mod scraper;
 pub use boa_gc;
+pub use boa_runtime;
 pub use core::BookCore;
