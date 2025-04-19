@@ -96,3 +96,14 @@ fn test() {
     let res = wk8.eval("test();".to_string());
     println!("{}", res.unwrap());
 }
+
+#[test]
+fn action() {
+    let code = include_str!("./wk8.js");
+    let mut wk8 = BookCore::init(
+        code.to_string(),
+        Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
+    );
+    let res = wk8.run_action("test".to_string());
+    println!("{}", res.unwrap());
+}

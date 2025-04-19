@@ -81,6 +81,10 @@ impl BookCore {
         self.eval("actions".to_string())
     }
 
+    pub fn run_action(&mut self, action: String) -> Result<String, String> {
+        self.eval(format!("{}()", action).to_string())
+    }
+
     pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Value, String> {
         let res = self.eval(format!(
             "search({{key: '{}', page: {}, count: {}}});",
