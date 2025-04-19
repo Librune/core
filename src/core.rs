@@ -32,6 +32,9 @@ impl BookCore {
             .delete_property_or_throw(js_string!("console"), context)
             .expect("Failed to delete console");
         Console::register_with_logger(context, logger).expect("Failed to register custom logger");
+        context
+        .eval(Source::from_bytes("const console_log = console.log;console.log = function(...args) { const string_args =  args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg); console_log(...string_args);  };"))
+        .expect("Failed to eval console");
     }
 
     pub fn eval(&mut self, code: String) -> Result<String, String> {

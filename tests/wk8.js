@@ -183,5 +183,9 @@ const chapter = ({ bid, cid }) => {
 
 const test = () => {
   console.log('wenku8 test')
-  console.log(JSON.stringify(__ENVS__, null, 2))
+  console.log({
+    a: 1,
+    b: '2',
+    c: 3,
+  })
 }
