@@ -33,7 +33,7 @@ fn t() {
     BKS.with(|bks| {
         let mut bks = bks.borrow_mut();
         let bks = bks.as_mut().unwrap();
-        match bks.get_form() {
+        match bks.get_forms() {
             Ok(form) => println!("Form: {:?}", form),
             Err(err) => println!("Error getting form: {:?}", err),
         }

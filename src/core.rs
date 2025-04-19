@@ -73,8 +73,12 @@ impl BookCore {
         self.eval("metadata".to_string())
     }
 
-    pub fn get_form(&mut self) -> Result<String, String> {
-        self.eval("form".to_string())
+    pub fn get_forms(&mut self) -> Result<String, String> {
+        self.eval("forms".to_string())
+    }
+
+    pub fn get_actions(&mut self) -> Result<String, String> {
+        self.eval("actions".to_string())
     }
 
     pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Value, String> {

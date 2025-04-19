@@ -64,7 +64,7 @@ fn get_form() {
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
-    let res = wk8.get_form();
+    let res = wk8.get_forms();
     println!("{}", res.unwrap());
 }
 

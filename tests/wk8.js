@@ -7,7 +7,7 @@ const metadata = {
   author: 'Nexw',
 }
 const _APPVER = '1.13'
-const form = [
+const forms = [
   {
     name: '用户登录',
     desc: '你可以直接设置 Cookies，也可以填写账号密码后手动登录生成，二选一即可，最终以 Cookies 字段的值为准',
