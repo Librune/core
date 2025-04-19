@@ -63,7 +63,7 @@ const login = () => {
     password: pwd,
   })
   if (res.body == 1) {
-    __ENVS__.cookies = res.headers['set-cookie']
+    ENVS.cookies = res.headers['set-cookie']
     return JSON.stringify(__ENVS__)
   } else {
     return null
@@ -179,9 +179,4 @@ const chapter = ({ bid, cid }) => {
   return {
     content: res.body.split('\n\n\n')[1],
   }
-}
-
-const test = () => {
-  console.log('wenku8 test')
-  console.log(JSON.stringify(__ENVS__, null, 2))
 }

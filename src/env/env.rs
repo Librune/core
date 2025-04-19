@@ -1,3 +1,5 @@
+// 不需要构建原生对象，直接用 js 糊一个 object 就行了，反正内容都是存放在 boa context 中，不需要在 rust 中持有
+
 use std::collections::HashMap;
 
 use boa_engine::{
@@ -10,14 +12,14 @@ use serde_json::{json, Value};
 #[derive(Debug, Trace, Finalize, JsData)]
 struct ENVS {
     #[unsafe_ignore_trace]
-    envs: HashMap<String, Value>,
+    values: HashMap<String, Value>,
 }
 
 impl ENVS {
     fn get_values(this: &JsValue, _args: &[JsValue], context: &mut Context) -> JsResult<JsValue> {
         if let Some(object) = this.as_object() {
             if let Some(envs) = object.downcast_ref::<ENVS>() {
-                let json_value = json!(envs.envs.clone());
+                let json_value = json!(envs.values.clone());
                 return Ok(JsValue::from_json(&json_value, context)?);
             }
         }
@@ -31,7 +33,7 @@ impl ENVS {
             if let Some(mut envs) = object.downcast_mut::<ENVS>() {
                 if let Some(env) = args.get(0) {
                     if let Ok(env_map) = env.to_json(context) {
-                        envs.envs.extend(env_map.as_object().unwrap().clone());
+                        envs.values.extend(env_map.as_object().unwrap().clone());
                         return Ok(JsValue::undefined());
                     }
                 }
@@ -47,7 +49,7 @@ impl ENVS {
             if let Some(envs) = object.downcast_ref::<ENVS>() {
                 if let Some(key) = args.get(0) {
                     if let Ok(key_str) = key.to_string(context) {
-                        if let Some(value) = envs.envs.get(&key_str.to_std_string_escaped()) {
+                        if let Some(value) = envs.values.get(&key_str.to_std_string_escaped()) {
                             return Ok(JsValue::from_json(value, context)?);
                         }
                     }
@@ -65,7 +67,7 @@ impl ENVS {
                 if let Some(key) = args.get(0) {
                     if let Ok(key_str) = key.to_string(context) {
                         if let Some(value) = args.get(1) {
-                            envs.envs
+                            envs.values
                                 .insert(key_str.to_std_string_escaped(), value.to_json(context)?);
                             return Ok(JsValue::undefined());
                         }
@@ -81,7 +83,7 @@ impl ENVS {
     fn clear(this: &JsValue, _args: &[JsValue], _context: &mut Context) -> JsResult<JsValue> {
         if let Some(object) = this.as_object() {
             if let Some(mut envs) = object.downcast_mut::<ENVS>() {
-                envs.envs.clear();
+                envs.values.clear();
                 return Ok(JsValue::undefined());
             }
         }
@@ -100,8 +102,8 @@ impl Class for ENVS {
         _args: &[JsValue],
         _context: &mut Context,
     ) -> JsResult<Self> {
-        let envs = HashMap::new();
-        Ok(ENVS { envs })
+        let values = HashMap::new();
+        Ok(ENVS { values })
     }
 
     fn init(class: &mut ClassBuilder<'_>) -> JsResult<()> {

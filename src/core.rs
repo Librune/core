@@ -1,29 +1,44 @@
 use std::collections::HashMap;
 
-use boa_engine::{Context, Source};
+use boa_engine::{js_string, Context, Source};
+use boa_runtime::{Console, Logger};
 use serde_json::Value;
 use tokio::runtime::Runtime;
 
 use crate::runtime::init_runtime;
 
 pub struct BookCore {
-    pub code: String,
+    // pub code: String,
     pub context: Context,
 }
 
 impl BookCore {
-    pub fn new(code: String, env: Option<HashMap<String, String>>) -> Self {
+    pub fn init(code: String, env: Option<HashMap<String, String>>) -> Self {
         let mut core = Self {
-            code,
+            // code,
             context: Context::default(),
         };
         init_runtime(&mut core);
+        &core
+            .context
+            .eval(Source::from_bytes(code.as_str()))
+            .unwrap();
         core
+    }
+
+    pub fn regist_cust_logger(&mut self, logger: impl Logger + 'static) {
+        let context = &mut self.context;
+        context
+            .global_object()
+            .delete_property_or_throw(js_string!("console"), context)
+            .expect("Failed to delete console");
+        Console::register_with_logger(context, logger).expect("Failed to register custom logger");
     }
 
     pub fn eval(&mut self, code: String) -> Result<String, String> {
         let rt = Runtime::new().unwrap();
-        let code = format!("{}\n{}", self.code, code);
+        let code = format!("{}", code);
+        println!("{}", code);
         rt.block_on(async {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
@@ -57,11 +72,11 @@ impl BookCore {
     }
 
     pub fn get_metadata(&mut self) -> Result<String, String> {
-        self.eval("metadata;".to_string())
+        self.eval("metadata".to_string())
     }
 
     pub fn get_form(&mut self) -> Result<String, String> {
-        self.eval("form;".to_string())
+        self.eval("form".to_string())
     }
 
     pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Value, String> {

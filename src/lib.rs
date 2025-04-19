@@ -6,4 +6,5 @@ mod prototype;
 mod request;
 mod runtime;
 mod scraper;
+pub use boa_gc;
 pub use core::BookCore;

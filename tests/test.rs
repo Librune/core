@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use book_core::BookCore;
-use serde_json::json;
 
 #[test]
 fn search_books() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -17,7 +16,7 @@ fn search_books() {
 #[test]
 fn get_book_detail() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -28,7 +27,7 @@ fn get_book_detail() {
 #[test]
 fn get_catalog() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -39,7 +38,7 @@ fn get_catalog() {
 #[test]
 fn get_chapter() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -50,7 +49,7 @@ fn get_chapter() {
 #[test]
 fn get_metadata() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -61,7 +60,7 @@ fn get_metadata() {
 #[test]
 fn get_form() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
@@ -72,11 +71,11 @@ fn get_form() {
 #[test]
 fn test_envs() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::new(
+    let mut wk8 = BookCore::init(
         code.to_string(),
         Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
     );
-    let res = wk8.eval("console.log(__ENVS__);".to_string());
+    let res = wk8.eval("console.log(__ENVS__)".to_string());
     println!("{}", res.unwrap());
     // wk8.set_envs(HashMap::from_iter(vec![(
     //     "name".to_string(),
@@ -85,4 +84,15 @@ fn test_envs() {
     // .unwrap();
     // let res = wk8.get_envs();
     // println!("{}", res.unwrap());
+}
+
+#[test]
+fn test() {
+    let code = include_str!("./wk8.js");
+    let mut wk8 = BookCore::init(
+        code.to_string(),
+        Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
+    );
+    let res = wk8.eval("test();".to_string());
+    println!("{}", res.unwrap());
 }

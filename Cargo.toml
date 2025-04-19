@@ -26,3 +26,5 @@ aes = "0.8.4"
 percent-encoding = "2.3.1"
 md5 = "0.7.0" 
 uuid = { version = "1.16.0", features=["v4","fast-rng"] }
+rustc-hash = "2.1.1"
+thread_local = "1.1.8"
