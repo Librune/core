@@ -19,8 +19,7 @@ impl BookCore {
             context: Context::default(),
         };
         init_runtime(&mut core);
-        &core
-            .context
+        core.context
             .eval(Source::from_bytes(code.as_str()))
             .unwrap();
         core
