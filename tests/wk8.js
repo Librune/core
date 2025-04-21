@@ -40,6 +40,7 @@ const forms = [
     ],
   },
 ]
+const actions = []
 const post = (params) => {
   const request = params.toQuery().toBase64()
   const timeStamp = new Date().getTime()

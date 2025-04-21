@@ -1,24 +1,24 @@
-use std::collections::HashMap;
-
-use boa_engine::{js_string, Context, Source};
+use boa_engine::{js_string, Context, JsNativeError, JsResult, JsValue, Source};
 use boa_runtime::{Console, Logger};
-use serde_json::Value;
+use serde_json::{json, Value};
 use tokio::runtime::Runtime;
 
 use crate::runtime::init_runtime;
 
+#[derive(Debug)]
 pub struct BookCore {
-    // pub code: String,
     pub context: Context,
 }
 
 impl BookCore {
-    pub fn init(code: String, env: Option<HashMap<String, String>>) -> Self {
+    pub fn init(code: String) -> Self {
         let mut core = Self {
-            // code,
             context: Context::default(),
         };
         init_runtime(&mut core);
+        core.context
+            .eval(Source::from_bytes(format!("setEnvs()").as_bytes()))
+            .expect("Failed to eval __ENVS__");
         core.context
             .eval(Source::from_bytes(code.as_str()))
             .unwrap();
@@ -54,22 +54,51 @@ impl BookCore {
         })
     }
 
-    pub fn set_envs(&mut self, env: HashMap<String, Value>) -> Result<Value, String> {
-        let res = self.eval(format!("__ENVS__.setValues({:?})", env))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+    pub fn call_func(&mut self, func: String, args: Vec<Value>) -> JsResult<JsValue> {
+        let context = &mut self.context;
+        let global = context.global_object();
+        let func = global.get(js_string!(func), context)?;
+        if !func.is_callable() {
+            Err(JsNativeError::typ()
+                .with_message(format!("{:?} is not callable", func))
+                .into())
+        } else {
+            let func = func.as_callable().unwrap();
+            let args: Vec<JsValue> = args
+                .into_iter()
+                .map(|arg| JsValue::from_json(&arg, context).unwrap())
+                .collect();
+            func.call(&JsValue::undefined(), &args, context)
+        }
+    }
+
+    pub fn set_envs(&mut self, envs: Value) -> Result<(), String> {
+        self.call_func("setEnvs".to_string(), vec![envs])
+            .map(|_| ())
+            .map_err(|err| err.to_string())
+    }
+
+    pub fn set_env(&mut self, key: String, value: Value) -> Result<(), String> {
+        self.eval(format!("setEnv('{}', {:?})", key, value))?;
+        Ok(())
     }
 
     pub fn get_envs(&mut self) -> Result<Value, String> {
-        let res = self.eval("__ENVS__.envs".to_string())?;
+        let res = self.eval(format!("getEnvs()"))?;
         let res = serde_json::from_str::<Value>(&res)
             .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
         Ok(res)
     }
 
+    pub fn get_env(&mut self, key: String) -> Result<Value, String> {
+        self.call_func("getEnv".to_string(), vec![json!(key)])
+            .map(|value| value.to_json(&mut self.context).unwrap())
+            .map_err(|err| err.to_string())
+    }
+
     pub fn clear_envs(&mut self) {
-        // self.env.clear();
+        self.call_func("clearEnvs".to_string(), vec![])
+            .expect("Failed to clear envs");
     }
 
     pub fn get_metadata(&mut self) -> Result<String, String> {

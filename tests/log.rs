@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::io::Write;
 
 use boa_engine::JsError;
@@ -38,10 +37,7 @@ impl Logger for CustLogger {
 #[test]
 fn test() {
     let code = include_str!("./wk8.js");
-    let mut wk8 = BookCore::init(
-        code.to_string(),
-        Some(HashMap::from_iter(vec![("a".to_string(), "b".to_string())])),
-    );
+    let mut wk8 = BookCore::init(code.to_string());
     wk8.regist_cust_logger(CustLogger);
     let res = wk8.eval("test();".to_string());
     println!("{}", res.unwrap());

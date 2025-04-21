@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap};
+use std::cell::RefCell;
 
 use book_core::BookCore;
 
@@ -10,10 +10,7 @@ thread_local! {
 fn t() {
     BKS.with(|bks| {
         let mut bks = bks.borrow_mut();
-        *bks = Some(BookCore::init(
-            include_str!("./wk8.js").to_string(),
-            Some(HashMap::new()),
-        ));
+        *bks = Some(BookCore::init(include_str!("./wk8.js").to_string()));
         let bks = bks.as_mut().unwrap();
         let res = bks.eval("test();".to_string());
         match res {

@@ -4,7 +4,7 @@ use boa_runtime::Console;
 use crate::{
     core::BookCore,
     crypto::crypto::define_decrypt,
-    env::env::define_envs,
+    env::env::regist_envs,
     global::{
         uuid::{regist_is_uuid, regist_uuid},
         xml2json::regist_xml_to_json,
@@ -24,7 +24,8 @@ pub fn init_runtime(core: &mut BookCore) {
             Attribute::WRITABLE | Attribute::CONFIGURABLE,
         )
         .expect("Failed to register console");
-    define_envs(context);
+    // define_envs(context);
+    regist_envs(context);
     define_request(context);
     define_scraper(context);
     define_decrypt(context);
