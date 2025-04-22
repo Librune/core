@@ -117,34 +117,22 @@ impl BookCore {
         self.eval(format!("{}()", action).to_string())
     }
 
-    pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Value, String> {
-        let res = self.eval(format!(
+    pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<String, String> {
+        self.eval(format!(
             "search({{key: '{}', page: {}, count: {}}});",
             keyword, page, count
-        ))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+        ))
     }
 
-    pub fn get_book_detail(&mut self, bid: String) -> Result<Value, String> {
-        let res = self.eval(format!("detail({{bid: '{}'}});", bid))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+    pub fn get_book_detail(&mut self, bid: String) -> Result<String, String> {
+        self.eval(format!("detail({{bid: '{}'}});", bid))
     }
 
-    pub fn get_catalog(&mut self, bid: String) -> Result<Value, String> {
-        let res = self.eval(format!("catalog({{bid: '{}'}});", bid))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+    pub fn get_catalog(&mut self, bid: String) -> Result<String, String> {
+         self.eval(format!("catalog({{bid: '{}'}});", bid))
     }
 
-    pub fn get_chapter(&mut self, bid: String, cid: String) -> Result<Value, String> {
-        let res = self.eval(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+    pub fn get_chapter(&mut self, bid: String, cid: String) -> Result<String, String> {
+         self.eval(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))
     }
 }
