@@ -10,6 +10,84 @@ pub struct BookCore {
     pub context: Context,
 }
 
+#[derive(Debug, Clone)]
+pub enum BookStatus {
+    Ongoing,
+    Completed,
+    Abandoned,
+    Other,
+}
+
+#[derive(Debug,Clone)]
+pub struct SearchBook {
+    id: String,
+    name: String,
+    author: Option<String>,
+    cover: Option<String>,
+    description: Option<String>,
+    status:Option<BookStatus>,
+    tags: Option<Vec<String>>,
+    last_update_time: Option<String>,
+    lastest_chapter: Option<String>,
+}
+
+#[derive(Debug,Clone)]
+pub struct BookLatestChapter{
+    id: String,
+    name: String,
+    update_time: Option<String>,
+}
+
+#[derive(Debug,Clone)]
+pub struct BookExtraData {
+    label: String,
+    value: String,
+}
+
+#[derive(Debug,Clone)]
+pub struct BookDetail {
+    id: String,
+    name: String,
+    author:Option<String>,
+    description: Option<String>,
+    word_count: Option<u64>,
+    cover: Option<String>,
+    tags: Option<Vec<String>>,
+    status: Option<BookStatus>,
+    copy_right: Option<String>,
+    latest_chapter:Option<BookLatestChapter>,
+    extra_datas: Option<Vec<BookExtraData>>,
+}
+
+#[derive(Debug,Clone)]
+pub struct CatalogChapter{
+    id: String,
+    name: String,
+    is_vip: Option<bool>,
+    can_read: Option<bool>,
+    update_time: Option<String>,
+}
+
+#[derive(Debug,Clone)]
+pub struct CatalogVolume {
+    id: String,
+    name: String,
+    chapters: Vec<CatalogChapter>,
+}
+
+#[derive(Debug,Clone)]
+pub struct Chapter{
+    id: String,
+    content: String,
+    name: Option<String>,
+    is_vip: Option<bool>,
+    can_read: Option<bool>,
+    update_time: Option<String>,
+    word_count: Option<u64>,
+    comment_count: Option<u64>,
+    comment_begin_at_title: Option<bool>,
+}
+
 impl BookCore {
     pub fn init(code: String) -> Self {
         let mut core = Self {
