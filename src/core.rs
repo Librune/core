@@ -1,24 +1,59 @@
 use boa_engine::{js_string, Context, JsNativeError, JsResult, JsValue, Source};
 use boa_runtime::{Console, Logger};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
 
 use crate::runtime::init_runtime;
 
-#[derive(Debug)]
+#[derive(Debug )]
 pub struct BookCore {
     pub context: Context,
 }
 
-#[derive(Debug, Clone)]
-pub enum BookStatus {
-    Ongoing,
-    Completed,
-    Abandoned,
-    Other,
+#[derive(Debug, Clone,Deserialize,Serialize)]
+pub enum ProxyType {
+    Http,
+    Https,
+    Socks4,
+    Socks5,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone,Deserialize,Serialize)]
+pub struct Proxy{
+    host: String,
+    port: u8,
+    type_: Option<ProxyType>,
+    username: Option<String>,
+    password: Option<String>,
+}
+
+#[derive(Debug, Clone,Deserialize,Serialize)]
+pub struct MetaData {
+    name: String,
+    uuid: String,
+    #[serde(rename = "baseUrl")]
+    base_url: String,
+    author: String,
+    #[serde(rename = "userAgent")]
+    user_agent: String,
+    proxy: Option<Proxy>,
+    version: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum BookStatus {
+    #[serde(rename = "0")]
+    连载中,    
+    #[serde(rename = "1")]
+    已完结,      
+    #[serde(rename = "2")]
+    已下架,       
+    #[serde(rename = "3")]
+    已断更,  
+}
+
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct SearchBook {
     id: String,
     name: String,
@@ -31,51 +66,57 @@ pub struct SearchBook {
     lastest_chapter: Option<String>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct BookLatestChapter{
     id: String,
     name: String,
     update_time: Option<String>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct BookExtraData {
     label: String,
     value: String,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct BookDetail {
     id: String,
     name: String,
     author:Option<String>,
     description: Option<String>,
+    #[serde(rename = "wordCount")]
     word_count: Option<u64>,
     cover: Option<String>,
     tags: Option<Vec<String>>,
     status: Option<BookStatus>,
     copy_right: Option<String>,
+    #[serde(rename = "latestChapter")]
     latest_chapter:Option<BookLatestChapter>,
+    #[serde(rename = "extraDatas")]
     extra_datas: Option<Vec<BookExtraData>>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct CatalogChapter{
     id: String,
     name: String,
+    #[serde(rename = "isVip")]
     is_vip: Option<bool>,
+    #[serde(rename = "canRead")]
     can_read: Option<bool>,
+    #[serde(rename = "updateTime")]
     update_time: Option<String>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct CatalogVolume {
     id: String,
     name: String,
     chapters: Vec<CatalogChapter>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Deserialize,Serialize)]
 pub struct Chapter{
     id: String,
     content: String,
@@ -115,18 +156,18 @@ impl BookCore {
         .expect("Failed to eval console");
     }
 
-    pub fn eval(&mut self, code: String) -> Result<String, String> {
+    pub fn eval<T>(&mut self, code: String) -> Result<T, String> 
+    where
+        T: DeserializeOwned,
+    {
         let rt = Runtime::new().unwrap();
         let code = format!("{}", code);
         rt.block_on(async {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
                 .map(|value| {
-                    if value.is_object() {
-                        value.to_json(ctx).unwrap().to_string()
-                    } else {
-                        value.to_string(ctx).unwrap().to_std_string_escaped()
-                    }
+                    let value = value.to_json(ctx).unwrap();
+                    serde_json::from_value::<T>(value).unwrap()
                 })
                 .map_err(|err| err.to_string())
         })
@@ -156,16 +197,12 @@ impl BookCore {
             .map_err(|err| err.to_string())
     }
 
-    pub fn set_env(&mut self, key: String, value: Value) -> Result<(), String> {
-        self.eval(format!("setEnv('{}', {:?})", key, value))?;
-        Ok(())
+    pub fn set_env(&mut self, key: String, value: Value)  -> Result<(), String> {
+        self.eval(format!("setEnv('{}', {:?})", key, value))?
     }
 
     pub fn get_envs(&mut self) -> Result<Value, String> {
-        let res = self.eval(format!("getEnvs()"))?;
-        let res = serde_json::from_str::<Value>(&res)
-            .unwrap_or_else(|_| serde_json::Value::Object(serde_json::Map::new()));
-        Ok(res)
+         self.eval::<Value>(format!("getEnvs()")) 
     }
 
     pub fn get_env(&mut self, key: String) -> Result<Value, String> {
@@ -179,38 +216,38 @@ impl BookCore {
             .expect("Failed to clear envs");
     }
 
-    pub fn get_metadata(&mut self) -> Result<String, String> {
-        self.eval("metadata".to_string())
+    pub fn get_metadata(&mut self) -> Result<MetaData, String> {
+        self.eval::<MetaData>("metadata".to_string())
     }
 
     pub fn get_forms(&mut self) -> Result<String, String> {
         self.eval("forms".to_string())
     }
 
-    pub fn get_actions(&mut self) -> Result<String, String> {
+    pub fn get_actions(&mut self) -> Result<Value, String> {
         self.eval("actions".to_string())
     }
 
-    pub fn run_action(&mut self, action: String) -> Result<String, String> {
+    pub fn run_action(&mut self, action: String) -> Result<Value, String> {
         self.eval(format!("{}()", action).to_string())
     }
 
-    pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<String, String> {
-        self.eval(format!(
+    pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Vec<SearchBook>, String> {
+        self.eval::<Vec<SearchBook>>(format!(
             "search({{key: '{}', page: {}, count: {}}});",
             keyword, page, count
         ))
     }
 
-    pub fn get_book_detail(&mut self, bid: String) -> Result<String, String> {
-        self.eval(format!("detail({{bid: '{}'}});", bid))
+    pub fn get_book_detail(&mut self, bid: String) -> Result<BookDetail, String> {
+        self.eval::<BookDetail>(format!("detail({{bid: '{}'}});", bid))
     }
 
-    pub fn get_catalog(&mut self, bid: String) -> Result<String, String> {
-         self.eval(format!("catalog({{bid: '{}'}});", bid))
+    pub fn get_catalog(&mut self, bid: String) -> Result<Vec<CatalogVolume>, String> {
+         self.eval::<Vec<CatalogVolume>>(format!("catalog({{bid: '{}'}});", bid))
     }
 
-    pub fn get_chapter(&mut self, bid: String, cid: String) -> Result<String, String> {
-         self.eval(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))
+    pub fn get_chapter(&mut self, bid: String, cid: String) -> Result<Chapter, String> {
+         self.eval::<Chapter>(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))
     }
 }
