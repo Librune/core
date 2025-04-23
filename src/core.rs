@@ -6,29 +6,33 @@ use tokio::runtime::Runtime;
 
 use crate::runtime::init_runtime;
 
-#[derive(Debug )]
+#[derive(Debug)]
 pub struct BookCore {
     pub context: Context,
 }
 
-#[derive(Debug, Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum ProxyType {
+    #[serde(rename = "http")]
     Http,
+    #[serde(rename = "https")]
     Https,
+    #[serde(rename = "socks4")]
     Socks4,
+    #[serde(rename = "socks5")]
     Socks5,
 }
 
-#[derive(Debug, Clone,Deserialize,Serialize)]
-pub struct Proxy{
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Proxy {
     host: String,
     port: u8,
-    type_: Option<ProxyType>,
+    r#type: Option<ProxyType>,
     username: Option<String>,
     password: Option<String>,
 }
 
-#[derive(Debug, Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MetaData {
     name: String,
     uuid: String,
@@ -42,48 +46,82 @@ pub struct MetaData {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum BookStatus {
-    #[serde(rename = "0")]
-    连载中,    
-    #[serde(rename = "1")]
-    已完结,      
-    #[serde(rename = "2")]
-    已下架,       
-    #[serde(rename = "3")]
-    已断更,  
+pub enum FormFieldType {
+    #[serde(rename = "input")]
+    Input,
+    #[serde(rename = "select")]
+    Select,
+    #[serde(rename = "checkbox")]
+    Checkbox,
+    #[serde(rename = "button")]
+    Button,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct FormField {
+    r#type: FormFieldType,
+    field: String,
+    label: String,
+    placeholder: Option<String>,
+    password: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Form {
+    title: String,
+    description: Option<String>,
+    fields: Vec<FormField>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Action {
+    label: String,
+    action: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum BookStatus {
+    #[serde(rename = "0")]
+    连载中,
+    #[serde(rename = "1")]
+    已完结,
+    #[serde(rename = "2")]
+    已下架,
+    #[serde(rename = "3")]
+    已断更,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SearchBook {
     id: String,
     name: String,
     author: Option<String>,
     cover: Option<String>,
     description: Option<String>,
-    status:Option<BookStatus>,
+    status: Option<BookStatus>,
     tags: Option<Vec<String>>,
     last_update_time: Option<String>,
     lastest_chapter: Option<String>,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
-pub struct BookLatestChapter{
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BookLatestChapter {
     id: String,
     name: String,
     update_time: Option<String>,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BookExtraData {
     label: String,
     value: String,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BookDetail {
     id: String,
     name: String,
-    author:Option<String>,
+    author: Option<String>,
     description: Option<String>,
     #[serde(rename = "wordCount")]
     word_count: Option<u64>,
@@ -92,13 +130,13 @@ pub struct BookDetail {
     status: Option<BookStatus>,
     copy_right: Option<String>,
     #[serde(rename = "latestChapter")]
-    latest_chapter:Option<BookLatestChapter>,
+    latest_chapter: Option<BookLatestChapter>,
     #[serde(rename = "extraDatas")]
     extra_datas: Option<Vec<BookExtraData>>,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
-pub struct CatalogChapter{
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CatalogChapter {
     id: String,
     name: String,
     #[serde(rename = "isVip")]
@@ -109,15 +147,15 @@ pub struct CatalogChapter{
     update_time: Option<String>,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CatalogVolume {
     id: String,
     name: String,
     chapters: Vec<CatalogChapter>,
 }
 
-#[derive(Debug,Clone,Deserialize,Serialize)]
-pub struct Chapter{
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Chapter {
     id: String,
     content: String,
     name: Option<String>,
@@ -156,7 +194,7 @@ impl BookCore {
         .expect("Failed to eval console");
     }
 
-    pub fn eval<T>(&mut self, code: String) -> Result<T, String> 
+    pub fn eval<T>(&mut self, code: String) -> Result<T, String>
     where
         T: DeserializeOwned,
     {
@@ -166,8 +204,12 @@ impl BookCore {
             let ctx = &mut self.context;
             ctx.eval(Source::from_bytes(code.as_bytes()))
                 .map(|value| {
-                    let value = value.to_json(ctx).unwrap();
-                    serde_json::from_value::<T>(value).unwrap()
+                    if value.is_null_or_undefined() {
+                        serde_json::from_value::<T>(serde_json::Value::Null).unwrap()
+                    } else {
+                        let value = value.to_json(ctx).unwrap();
+                        serde_json::from_value::<T>(value).unwrap()
+                    }
                 })
                 .map_err(|err| err.to_string())
         })
@@ -197,12 +239,12 @@ impl BookCore {
             .map_err(|err| err.to_string())
     }
 
-    pub fn set_env(&mut self, key: String, value: Value)  -> Result<(), String> {
+    pub fn set_env(&mut self, key: String, value: Value) -> Result<(), String> {
         self.eval(format!("setEnv('{}', {:?})", key, value))?
     }
 
     pub fn get_envs(&mut self) -> Result<Value, String> {
-         self.eval::<Value>(format!("getEnvs()")) 
+        self.eval::<Value>(format!("getEnvs()"))
     }
 
     pub fn get_env(&mut self, key: String) -> Result<Value, String> {
@@ -220,19 +262,24 @@ impl BookCore {
         self.eval::<MetaData>("metadata".to_string())
     }
 
-    pub fn get_forms(&mut self) -> Result<String, String> {
-        self.eval("forms".to_string())
+    pub fn get_forms(&mut self) -> Result<Vec<Form>, String> {
+        self.eval::<Vec<Form>>("forms".to_string())
     }
 
-    pub fn get_actions(&mut self) -> Result<Value, String> {
-        self.eval("actions".to_string())
+    pub fn get_actions(&mut self) -> Result<Vec<Action>, String> {
+        self.eval::<Vec<Action>>("actions".to_string())
     }
 
     pub fn run_action(&mut self, action: String) -> Result<Value, String> {
         self.eval(format!("{}()", action).to_string())
     }
 
-    pub fn search_books(&mut self, keyword: String, page: u8, count: u8) -> Result<Vec<SearchBook>, String> {
+    pub fn search_books(
+        &mut self,
+        keyword: String,
+        page: u8,
+        count: u8,
+    ) -> Result<Vec<SearchBook>, String> {
         self.eval::<Vec<SearchBook>>(format!(
             "search({{key: '{}', page: {}, count: {}}});",
             keyword, page, count
@@ -244,10 +291,10 @@ impl BookCore {
     }
 
     pub fn get_catalog(&mut self, bid: String) -> Result<Vec<CatalogVolume>, String> {
-         self.eval::<Vec<CatalogVolume>>(format!("catalog({{bid: '{}'}});", bid))
+        self.eval::<Vec<CatalogVolume>>(format!("catalog({{bid: '{}'}});", bid))
     }
 
     pub fn get_chapter(&mut self, bid: String, cid: String) -> Result<Chapter, String> {
-         self.eval::<Chapter>(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))
+        self.eval::<Chapter>(format!("chapter({{bid: '{}', cid: '{}'}});", bid, cid))
     }
 }

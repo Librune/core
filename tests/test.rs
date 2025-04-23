@@ -28,7 +28,9 @@ fn get_catalog() {
 fn get_chapter() {
     let code = include_str!("./wk8.js");
     let mut wk8 = BookCore::init(code.to_string());
-    let res = wk8.get_chapter("3067".to_string(), "126119".to_string()).unwrap();
+    let res = wk8
+        .get_chapter("3067".to_string(), "126119".to_string())
+        .unwrap();
     println!("{:?}", res);
 }
 
@@ -40,41 +42,18 @@ fn get_metadata() {
     println!("{:?}", res);
 }
 
-// #[test]
-// fn get_form() {
-//     let code = include_str!("./wk8.js");
-//     let mut wk8 = BookCore::init(code.to_string());
-//     let res = wk8.get_forms();
-//     println!("{}", res.unwrap());
-// }
+#[test]
+fn get_form() {
+    let code = include_str!("./wk8.js");
+    let mut wk8 = BookCore::init(code.to_string());
+    let res = wk8.get_forms().unwrap();
+    println!("{:?}", res);
+}
 
-// #[test]
-// fn test_envs() {
-//     let code = include_str!("./wk8.js");
-//     let mut wk8 = BookCore::init(code.to_string());
-//     let res = wk8.eval("console.log(__ENVS__)".to_string());
-//     println!("{}", res.unwrap());
-//     // wk8.set_envs(HashMap::from_iter(vec![(
-//     //     "name".to_string(),
-//     //     json!("zsakvo"),
-//     // )]))
-//     // .unwrap();
-//     // let res = wk8.get_envs();
-//     // println!("{}", res.unwrap());
-// }
-
-// #[test]
-// fn test() {
-//     let code = include_str!("./wk8.js");
-//     let mut wk8 = BookCore::init(code.to_string());
-//     let res = wk8.eval("test();".to_string());
-//     println!("{}", res.unwrap());
-// }
-
-// #[test]
-// fn action() {
-//     let code = include_str!("./wk8.js");
-//     let mut wk8 = BookCore::init(code.to_string());
-//     let res = wk8.run_action("test".to_string());
-//     println!("{}", res.unwrap());
-// }
+#[test]
+fn action() {
+    let code = include_str!("./wk8.js");
+    let mut wk8 = BookCore::init(code.to_string());
+    let res = wk8.run_action("test".to_string()).unwrap();
+    println!("{:?}", res);
+}
