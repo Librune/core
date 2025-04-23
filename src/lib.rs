@@ -293,13 +293,13 @@ impl BookCore {
 
     pub fn search_books(
         &mut self,
-        keyword: String,
+        key: String,
         page: u8,
         count: u8,
     ) -> Result<Vec<SearchBook>, String> {
         self.eval::<Vec<SearchBook>>(format!(
             "search({{key: '{}', page: {}, count: {}}});",
-            keyword, page, count
+            key, page, count
         ))
     }
 
