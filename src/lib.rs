@@ -32,24 +32,24 @@ pub enum ProxyType {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Proxy {
-    host: String,
-    port: u8,
-    r#type: Option<ProxyType>,
-    username: Option<String>,
-    password: Option<String>,
+    pub host: String,
+    pub port: u8,
+    pub r#type: Option<ProxyType>,
+    pub username: Option<String>,
+    pub password: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MetaData {
-    name: String,
-    uuid: String,
+    pub name: String,
+    pub uuid: String,
     #[serde(rename = "baseUrl")]
-    base_url: String,
-    author: String,
+    pub base_url: String,
+    pub author: String,
     #[serde(rename = "userAgent")]
-    user_agent: String,
-    proxy: Option<Proxy>,
-    version: String,
+    pub user_agent: String,
+    pub proxy: Option<Proxy>,
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -66,24 +66,24 @@ pub enum FormFieldType {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FormField {
-    r#type: FormFieldType,
-    field: String,
-    label: String,
-    placeholder: Option<String>,
-    password: Option<bool>,
+    pub r#type: FormFieldType,
+    pub field: String,
+    pub label: String,
+    pub placeholder: Option<String>,
+    pub password: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Form {
-    title: String,
-    description: Option<String>,
-    fields: Vec<FormField>,
+    pub title: String,
+    pub description: Option<String>,
+    pub fields: Vec<FormField>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Action {
-    label: String,
-    action: String,
+    pub label: String,
+    pub action: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -100,78 +100,86 @@ pub enum BookStatus {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SearchBook {
-    id: String,
-    name: String,
-    author: Option<String>,
-    cover: Option<String>,
-    description: Option<String>,
-    status: Option<BookStatus>,
-    tags: Option<Vec<String>>,
-    last_update_time: Option<String>,
-    lastest_chapter: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub author: Option<String>,
+    pub cover: Option<String>,
+    pub description: Option<String>,
+    pub status: Option<BookStatus>,
+    pub tags: Option<Vec<String>>,
+    pub last_update_time: Option<String>,
+    pub lastest_chapter: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BookLatestChapter {
-    id: String,
-    name: String,
-    update_time: Option<String>,
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "updateTime")]
+    pub update_time: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BookExtraData {
-    label: String,
-    value: String,
+    pub label: String,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BookDetail {
-    id: String,
-    name: String,
-    author: Option<String>,
-    description: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub author: Option<String>,
+    pub description: Option<String>,
     #[serde(rename = "wordCount")]
-    word_count: Option<u64>,
-    cover: Option<String>,
-    tags: Option<Vec<String>>,
-    status: Option<BookStatus>,
-    copy_right: Option<String>,
+    pub word_count: Option<u64>,
+    pub cover: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub status: Option<BookStatus>,
+    #[serde(rename = "copyRight")]
+    pub copy_right: Option<String>,
     #[serde(rename = "latestChapter")]
-    latest_chapter: Option<BookLatestChapter>,
+    pub latest_chapter: Option<BookLatestChapter>,
     #[serde(rename = "extraDatas")]
-    extra_datas: Option<Vec<BookExtraData>>,
+    pub extra_datas: Option<Vec<BookExtraData>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CatalogChapter {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
     #[serde(rename = "isVip")]
-    is_vip: Option<bool>,
+    pub is_vip: Option<bool>,
     #[serde(rename = "canRead")]
-    can_read: Option<bool>,
+    pub can_read: Option<bool>,
     #[serde(rename = "updateTime")]
-    update_time: Option<String>,
+    pub update_time: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CatalogVolume {
-    id: String,
-    name: String,
-    chapters: Vec<CatalogChapter>,
+    pub id: String,
+    pub name: String,
+    pub chapters: Vec<CatalogChapter>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Chapter {
-    id: String,
-    content: String,
-    name: Option<String>,
-    is_vip: Option<bool>,
-    can_read: Option<bool>,
-    update_time: Option<String>,
-    word_count: Option<u64>,
-    comment_count: Option<u64>,
-    comment_begin_at_title: Option<bool>,
+    pub id: String,
+    pub content: String,
+    pub name: Option<String>,
+    #[serde(rename = "isVip")]
+    pub is_vip: Option<bool>,
+    #[serde(rename = "canRead")]
+    pub can_read: Option<bool>,
+    #[serde(rename = "updateTime")]
+    pub update_time: Option<String>,
+    #[serde(rename = "wordCount")]
+    pub word_count: Option<u64>,
+    #[serde(rename = "commentCount")]
+    pub comment_count: Option<u64>,
+    #[serde(rename = "commentBeginAtTitle")]
+    pub comment_begin_at_title: Option<bool>,
 }
 
 impl BookCore {
