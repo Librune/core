@@ -89,13 +89,13 @@ pub struct Action {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum BookStatus {
     #[serde(rename = "0")]
-    连载中,
+    Serializing,
     #[serde(rename = "1")]
-    已完结,
+    Finished,
     #[serde(rename = "2")]
-    已下架,
+    Removed,
     #[serde(rename = "3")]
-    已断更,
+    Stopped,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
