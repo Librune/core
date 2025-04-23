@@ -12,7 +12,7 @@ fn test_envs() {
     .unwrap();
     println!("----当前环境变量----");
     let res = wk8.get_envs().unwrap();
-    println!("{}", res);
+    println!("{:?}", res);
     println!("----用户名----");
     let res = wk8.get_env("name".to_string()).unwrap();
     println!("{}", res);
@@ -27,5 +27,5 @@ fn test_envs() {
     wk8.clear_envs();
     wk8.set_env("gender".to_string(), json!("female")).unwrap();
     let res = wk8.get_envs().unwrap();
-    println!("{}", res);
+    println!("{:?}", res);
 }

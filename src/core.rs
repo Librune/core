@@ -239,8 +239,8 @@ impl BookCore {
             .map_err(|err| err.to_string())
     }
 
-    pub fn set_env(&mut self, key: String, value: Value) -> Result<(), String> {
-        self.eval(format!("setEnv('{}', {:?})", key, value))?
+    pub fn set_env(&mut self, key: String, value: Value) -> Result<Value, String> {
+        self.eval::<Value>(format!("setEnv('{}', {:?})", key, value))
     }
 
     pub fn get_envs(&mut self) -> Result<Value, String> {

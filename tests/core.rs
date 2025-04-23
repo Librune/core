@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 
 use book_core::BookCore;
+use serde_json::Value;
 
 thread_local! {
     static BKS: RefCell<Option<BookCore>> = RefCell::new(None);
@@ -12,7 +13,7 @@ fn t() {
         let mut bks = bks.borrow_mut();
         *bks = Some(BookCore::init(include_str!("./wk8.js").to_string()));
         let bks = bks.as_mut().unwrap();
-        let res = bks.eval("test();".to_string());
+        let res = bks.eval::<Value>("test();".to_string());
         match res {
             Ok(value) => println!("{}", value),
             Err(err) => println!("Error: {:?}", err),
