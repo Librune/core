@@ -6,4 +6,4 @@ mod prototype;
 mod request;
 mod runtime;
 mod scraper;
-pub use core::BookCore;
+pub use core::*;
