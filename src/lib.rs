@@ -34,7 +34,8 @@ pub enum ProxyType {
 pub struct Proxy {
     pub host: String,
     pub port: u8,
-    pub r#type: Option<ProxyType>,
+    #[serde(rename = "proxyType")]
+    pub proxy_type: Option<ProxyType>,
     pub username: Option<String>,
     pub password: Option<String>,
 }
@@ -66,7 +67,8 @@ pub enum FormFieldType {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FormField {
-    pub r#type: FormFieldType,
+    #[serde(rename = "fieldType")]
+    pub field_type: FormFieldType,
     pub field: String,
     pub label: String,
     pub placeholder: Option<String>,

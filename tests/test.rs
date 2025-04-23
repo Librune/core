@@ -43,7 +43,7 @@ fn get_metadata() {
 }
 
 #[test]
-fn get_form() {
+fn get_forms() {
     let code = include_str!("./wk8.js");
     let mut wk8 = BookCore::init(code.to_string());
     let res = wk8.get_forms().unwrap();

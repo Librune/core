@@ -14,25 +14,25 @@ const forms = [
     description: '你可以直接设置 Cookies，也可以填写账号密码后手动登录生成，二选一即可，最终以 Cookies 字段的值为准',
     fields: [
       {
-        type: 'input',
+        fieldType: 'input',
         field: 'username',
         label: '用户名',
         placeholder: '请输入用户名',
       },
       {
-        type: 'input',
+        fieldType: 'input',
         field: 'password',
         label: '密码',
         password: true,
         placeholder: '请输入密码',
       },
       {
-        type: 'button',
+        fieldType: 'button',
         field: 'login',
         label: '登录',
       },
       {
-        type: 'input',
+        fieldType: 'input',
         field: 'cookies',
         label: 'Cookies',
         password: true,
