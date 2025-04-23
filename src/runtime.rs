@@ -2,7 +2,6 @@ use boa_engine::{js_string, property::Attribute};
 use boa_runtime::Console;
 
 use crate::{
-    core::BookCore,
     crypto::crypto::define_decrypt,
     env::env::regist_envs,
     global::{
@@ -12,6 +11,7 @@ use crate::{
     prototype::{object::extend_object, string::extend_string},
     request::jreqwest::define_request,
     scraper::jscraper::define_scraper,
+    BookCore,
 };
 
 pub fn init_runtime(core: &mut BookCore) {

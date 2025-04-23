@@ -5,6 +5,7 @@ use boa_engine::{Context, JsResult};
 use boa_gc::{Finalize, Trace};
 use boa_runtime::{ConsoleState, Logger};
 use book_core::BookCore;
+use serde_json::Value;
 
 #[derive(Debug, Trace, Finalize)]
 pub struct CustLogger;
@@ -39,6 +40,6 @@ fn test() {
     let code = include_str!("./wk8.js");
     let mut wk8 = BookCore::init(code.to_string());
     wk8.regist_cust_logger(CustLogger);
-    let res = wk8.eval("test();".to_string());
+    let res = wk8.eval::<Value>("test();".to_string());
     println!("{}", res.unwrap());
 }
