@@ -205,3 +205,61 @@ pub fn define_decrypt(context: &mut Context) {
         .register_global_class::<Decrypt>()
         .expect("the Decrypt builtin shouldn't exist");
 }
+
+#[derive(Debug, Trace, Finalize, JsData)]
+
+struct Encrypt {
+    cipher_mode: CipherMode,
+    aes_type: AesType,
+    padding_type: PaddingType,
+    encoding: Encoding,
+    key: Vec<u8>,
+    key_derivation: KeyDerivation,
+    iv: Option<Vec<u8>>,
+}
+
+impl Encrypt {
+    pub fn form_js_value(
+        _this: &JsValue,
+        args: &[JsValue],
+        ctx: &mut Context,
+    ) -> Result<Self, String> {
+        let options = args.get(0).unwrap();
+        if options.is_null_or_undefined() {
+            return Err("options 不能为空".to_string());
+        }
+        let options = options
+            .as_object()
+            .ok_or_else(|| "options 不是对象".to_string())?;
+        let chiper_mode = if let mode = options.get(js_string!("cipher_mode"), ctx) {
+            let val_str = mode
+                .unwrap()
+                .to_string(ctx)
+                .unwrap()
+                .to_std_string_escaped();
+            match val_str.as_str() {
+                "cbc" => CipherMode::Cbc,
+                _ => return Err("cipher_mode 只支持 cbc".to_string()),
+            }
+        } else {
+            CipherMode::Cbc
+        };
+    }
+}
+
+impl Class for Encrypt {
+    const NAME: &'static str = "Encrypt";
+    const LENGTH: usize = 1;
+    fn data_constructor(_this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<Self> {
+        let encrypt = Self::form_js_value(_this, args, ctx).unwrap_or_default();
+        Ok(encrypt)
+    }
+    fn init(class: &mut boa_engine::class::ClassBuilder<'_>) -> boa_engine::JsResult<()> {
+        class.method(
+            js_string!("value"),
+            1,
+            NativeFunction::from_fn_ptr(Self::encrypt),
+        );
+        Ok(())
+    }
+}
