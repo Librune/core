@@ -9,15 +9,15 @@ fn test_crypto_aes256_pkcs7() {
         let iv = "0000000000000000";
         console.log(iv.toAscii())
         iv = iv.toAscii();
-        let encrypt = new Encrypt({
+        let encrypt = new AesCrypto({
             cipher_mode: "cbc",
             aes_type: "aes256",
             padding_type: "pkcs7",
             encoding: "base64",
             key: key,
-            iv: new Array(16).fill(0x30),
+            iv
         });
-        return encrypt.value(text);
+        return encrypt.encrypt(text);
     }
     "#;
     let mut core = BookCore::init(js.to_string());
