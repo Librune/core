@@ -20,12 +20,12 @@ pub enum AesType {
 // 填充模式
 #[derive(Debug, Clone, Trace, Finalize)]
 pub enum PaddingType {
-    Pkcs5,
     Pkcs7,
     NoPadding,
-    // Zero,
-    // Iso10126,
-    // AnsiX923,
+    ZeroPadding,
+    Iso10126,
+    AnsiX923,
+    Iso7816,
 }
 
 // 编码方式
