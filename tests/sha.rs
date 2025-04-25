@@ -17,7 +17,7 @@ fn test_crypto_sha256() {
     let js = r#"
     function test(){
         let text = "1234";
-        console.log(text.toSha256())
+        console.log(text.toSha256("a90f3731745f1c30ee77cb13fc00005a"))
     }
     "#;
     let mut core = BookCore::init(js.to_string());
