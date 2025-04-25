@@ -9,7 +9,9 @@ use boa_gc::{Finalize, Trace};
 
 use super::enums::{AesType, CipherMode, Encoding, PaddingType};
 
+type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;
 type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
+type Aes128CbcEnc = cbc::Encryptor<aes::Aes128>;
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
 
 #[derive(Debug, Trace, Finalize, JsData)]
@@ -44,6 +46,7 @@ impl AesCrypto {
             let val_str = aes_type.to_string(ctx).unwrap().to_std_string_escaped();
             match val_str.as_str() {
                 "aes256" => AesType::Aes256,
+                "aes128" => AesType::Aes128,
                 _ => return Err(js_error!("不支持的 aes_type")),
             }
         } else {
@@ -139,7 +142,21 @@ impl AesCrypto {
         let iv = &options.iv;
         let encrypted = match options.cipher_mode {
             CipherMode::Cbc => match options.aes_type {
+                AesType::Aes128 => {
+                    let key = &key[..16];
+                    let cipher = Aes128CbcEnc::new_from_slices(key, &iv)
+                        .map_err(|_| js_error!("aes128 cbc new error"))?;
+                    let plaintext = origin_text.as_bytes();
+                    let mut buf = [0u8; 48];
+                    let pt_len = plaintext.len();
+                    buf[..pt_len].copy_from_slice(plaintext);
+                    cipher
+                        .encrypt_padded_mut::<Pkcs7>(&mut buf, pt_len)
+                        .map_err(|_| js_error!("aes256 cbc encrypt error"))?
+                        .to_vec()
+                }
                 AesType::Aes256 => {
+                    let key = &key[..32];
                     let cipher = Aes256CbcEnc::new_from_slices(key, &iv)
                         .map_err(|_| js_error!("aes256 cbc new error"))?;
                     let plaintext = origin_text.as_bytes();
@@ -181,7 +198,18 @@ impl AesCrypto {
         let iv = &options.iv;
         let decrypted = match options.cipher_mode {
             CipherMode::Cbc => match options.aes_type {
+                AesType::Aes128 => {
+                    let key = &key[..16];
+                    let cipher = Aes128CbcDec::new_from_slices(key, &iv)
+                        .map_err(|_| js_error!("aes256 cbc new error"))?;
+                    let mut buffer = encrypted_bytes.clone();
+                    cipher
+                        .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+                        .map_err(|_| js_error!("aes256 cbc decrypt error"))?
+                        .to_vec()
+                }
                 AesType::Aes256 => {
+                    let key = &key[..32];
                     let cipher = Aes256CbcDec::new_from_slices(key, &iv)
                         .map_err(|_| js_error!("aes256 cbc new error"))?;
                     let mut buffer = encrypted_bytes.clone();
