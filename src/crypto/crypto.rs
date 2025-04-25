@@ -280,30 +280,96 @@ impl AesCrypto {
                     let cipher = Aes128CbcDec::new_from_slices(key, &iv)
                         .map_err(|_| js_error!("aes128 cbc new error"))?;
                     let mut buffer = encrypted_bytes.clone();
-                    cipher
-                        .decrypt_padded_mut::<Pkcs7>(&mut buffer)
-                        .map_err(|_| js_error!("aes128 cbc decrypt error"))?
-                        .to_vec()
+                    match options.padding_type {
+                        PaddingType::Pkcs7 => cipher
+                            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::NoPadding => cipher
+                            .decrypt_padded_mut::<NoPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::ZeroPadding => cipher
+                            .decrypt_padded_mut::<ZeroPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso10126 => cipher
+                            .decrypt_padded_mut::<Iso10126>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::AnsiX923 => cipher
+                            .decrypt_padded_mut::<AnsiX923>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso7816 => cipher
+                            .decrypt_padded_mut::<Iso7816>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                    }
                 }
                 AesType::Aes192 => {
                     let key = &key[..24];
                     let cipher = Aes192CbcDec::new_from_slices(key, &iv)
                         .map_err(|_| js_error!("aes192 cbc new error"))?;
                     let mut buffer = encrypted_bytes.clone();
-                    cipher
-                        .decrypt_padded_mut::<Pkcs7>(&mut buffer)
-                        .map_err(|_| js_error!("aes192 cbc decrypt error"))?
-                        .to_vec()
+                    match options.padding_type {
+                        PaddingType::Pkcs7 => cipher
+                            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::NoPadding => cipher
+                            .decrypt_padded_mut::<NoPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::ZeroPadding => cipher
+                            .decrypt_padded_mut::<ZeroPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso10126 => cipher
+                            .decrypt_padded_mut::<Iso10126>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::AnsiX923 => cipher
+                            .decrypt_padded_mut::<AnsiX923>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso7816 => cipher
+                            .decrypt_padded_mut::<Iso7816>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                    }
                 }
                 AesType::Aes256 => {
                     let key = &key[..32];
                     let cipher = Aes256CbcDec::new_from_slices(key, &iv)
                         .map_err(|_| js_error!("aes256 cbc new error"))?;
                     let mut buffer = encrypted_bytes.clone();
-                    cipher
-                        .decrypt_padded_mut::<Pkcs7>(&mut buffer)
-                        .map_err(|_| js_error!("aes256 cbc decrypt error"))?
-                        .to_vec()
+                    match options.padding_type {
+                        PaddingType::Pkcs7 => cipher
+                            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::NoPadding => cipher
+                            .decrypt_padded_mut::<NoPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::ZeroPadding => cipher
+                            .decrypt_padded_mut::<ZeroPadding>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso10126 => cipher
+                            .decrypt_padded_mut::<Iso10126>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::AnsiX923 => cipher
+                            .decrypt_padded_mut::<AnsiX923>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                        PaddingType::Iso7816 => cipher
+                            .decrypt_padded_mut::<Iso7816>(&mut buffer)
+                            .map_err(|_| js_error!("aes128 cbc decrypt error"))?
+                            .to_vec(),
+                    }
                 }
             },
         };
