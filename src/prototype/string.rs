@@ -1,7 +1,7 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use boa_engine::{
     js_string,
-    object::FunctionObjectBuilder,
+    object::{builtins::JsArray, FunctionObjectBuilder},
     property::{PropertyDescriptor, PropertyKey},
     Context, JsError, JsValue, NativeFunction,
 };
@@ -55,6 +55,30 @@ fn register_to_md5(context: &mut Context) -> Result<bool, JsError> {
     register(context, "toMd5", func)
 }
 
+fn register_to_ascii(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        // 将调用对象转换为字符串
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        let digest = this_str.as_str().bytes().collect::<Vec<u8>>();
+        Ok(JsValue::from(JsArray::from_iter(
+            digest.iter().map(|b| JsValue::Integer(*b as i32)),
+            context,
+        )))
+    });
+    register(context, "toAscii", func)
+}
+
+fn register_to_hex(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        // 将调用对象转换为字符串
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        // 使用 md5 包计算 MD5 值，并格式化为 16 进制字符串
+        let digest = format!("{:x}", md5::compute(this_str));
+        Ok(JsValue::String(digest.into()))
+    });
+    register(context, "toHex", func)
+}
+
 pub fn extend_string(ctx: &mut Context) {
     // Register the toQuery function to the String prototype
     // regist_to_query(ctx).expect("Failed to register toQuery function");
@@ -64,4 +88,7 @@ pub fn extend_string(ctx: &mut Context) {
     register_to_base64(ctx).expect("Failed to register toBase64 function");
     // Register the toMD5 function to the String prototype
     register_to_md5(ctx).expect("Failed to register toMD5 function");
+    // Register the toHex function to the String prototype
+    register_to_ascii(ctx).expect("Failed to register toAscii function");
+    register_to_hex(ctx).expect("Failed to register toHex function");
 }
