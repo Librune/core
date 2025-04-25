@@ -5,12 +5,10 @@ use boa_engine::{
     property::{PropertyDescriptor, PropertyKey},
     Context, JsError, JsValue, NativeFunction,
 };
-use encoding_rs::GBK;
-use hmac::{Hmac, Mac};
+use encoding_rs::GBK; 
 use percent_encoding::percent_encode;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
-
-type HmacSha256 = Hmac<Sha256>;
+ 
 
 fn register(ctx: &mut Context, name: &str, func: NativeFunction) -> Result<bool, JsError> {
     let string_proto = ctx.intrinsics().constructors().string().prototype();
@@ -99,9 +97,8 @@ fn register_to_sha224(context: &mut Context) -> Result<bool, JsError> {
 }
 
 fn register_to_sha256(context: &mut Context) -> Result<bool, JsError> {
-    let func = NativeFunction::from_fn_ptr(|this, args, context| {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
         let this_str = this.to_string(context)?.to_std_string_escaped();
-        let hmac_key = args.get(0);
         let mut hasher = Sha256::new();
         hasher.update(this_str);
         let result = hasher.finalize();
@@ -109,21 +106,7 @@ fn register_to_sha256(context: &mut Context) -> Result<bool, JsError> {
             .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>();
-        if let Some(key) = hmac_key {
-            let hmac_key = key.to_string(context)?.to_std_string_escaped();
-            let mut hmac = HmacSha256::new_from_slice(hmac_key.as_bytes())
-                .expect("HMAC can take key of any size");
-            hmac.update(digest.as_bytes());
-            let digest = hmac
-                .finalize()
-                .into_bytes()
-                .iter()
-                .map(|b| format!("{:02x}", b))
-                .collect::<String>();
-            Ok(JsValue::String(digest.into()))
-        } else {
-            Ok(JsValue::String(digest.into()))
-        }
+        Ok(JsValue::String(digest.into()))
     });
     register(context, "toSha256", func)
 }

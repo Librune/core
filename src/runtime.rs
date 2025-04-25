@@ -2,7 +2,7 @@ use boa_engine::{js_string, property::Attribute};
 use boa_runtime::Console;
 
 use crate::{
-    crypto::aes::define_aes_crypto,
+    crypto::{aes::define_aes_crypto, hmac::define_hmac},
     env::env::regist_envs,
     global::{
         rand_str::regist_rand_str,
@@ -30,6 +30,7 @@ pub fn init_runtime(core: &mut BookCore) {
     define_request(context);
     define_scraper(context);
     define_aes_crypto(context);
+    define_hmac(context);
     regist_xml_to_json(context);
     regist_rand_str(context);
     regist_uuid(context);
