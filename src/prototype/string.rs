@@ -7,6 +7,7 @@ use boa_engine::{
 };
 use encoding_rs::GBK;
 use percent_encoding::percent_encode;
+use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
 fn register(ctx: &mut Context, name: &str, func: NativeFunction) -> Result<bool, JsError> {
     let string_proto = ctx.intrinsics().constructors().string().prototype();
@@ -79,6 +80,66 @@ fn register_to_hex(context: &mut Context) -> Result<bool, JsError> {
     register(context, "toHex", func)
 }
 
+fn register_to_sha224(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        let mut hasher = Sha224::new();
+        hasher.update(this_str);
+        let result = hasher.finalize();
+        let digest = result
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+        Ok(JsValue::String(digest.into()))
+    });
+    register(context, "toSha224", func)
+}
+
+fn register_to_sha256(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        let mut hasher = Sha256::new();
+        hasher.update(this_str);
+        let result = hasher.finalize();
+        let digest = result
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+        Ok(JsValue::String(digest.into()))
+    });
+    register(context, "toSha256", func)
+}
+
+fn register_to_sha384(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        let mut hasher = Sha384::new();
+        hasher.update(this_str);
+        let result = hasher.finalize();
+        let digest = result
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+        Ok(JsValue::String(digest.into()))
+    });
+    register(context, "toSha384", func)
+}
+
+fn register_to_sha512(context: &mut Context) -> Result<bool, JsError> {
+    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
+        let this_str = this.to_string(context)?.to_std_string_escaped();
+        let mut hasher = Sha512::new();
+        hasher.update(this_str);
+        let result = hasher.finalize();
+        let digest = result
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+        Ok(JsValue::String(digest.into()))
+    });
+    register(context, "toSha512", func)
+}
+
 pub fn extend_string(ctx: &mut Context) {
     // Register the toQuery function to the String prototype
     // regist_to_query(ctx).expect("Failed to register toQuery function");
@@ -91,4 +152,8 @@ pub fn extend_string(ctx: &mut Context) {
     // Register the toHex function to the String prototype
     register_to_ascii(ctx).expect("Failed to register toAscii function");
     register_to_hex(ctx).expect("Failed to register toHex function");
+    register_to_sha224(ctx).expect("Failed to register toSha224 function");
+    register_to_sha256(ctx).expect("Failed to register toSha256 function");
+    register_to_sha384(ctx).expect("Failed to register toSha384 function");
+    register_to_sha512(ctx).expect("Failed to register toSha512 function");
 }
