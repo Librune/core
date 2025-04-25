@@ -9,7 +9,7 @@ fn test_crypto_aes256_pkcs7() {
         let iv = "0000000000000000";
         console.log(iv.toAscii())
         iv = iv.toAscii();
-        let encrypt = new AesCrypto({
+        let crypto = new AesCrypto({
             cipher_mode: "cbc",
             aes_type: "aes256",
             padding_type: "pkcs7",
@@ -17,7 +17,10 @@ fn test_crypto_aes256_pkcs7() {
             key: key,
             iv
         });
-        return encrypt.encrypt(text);
+        console.log(text);
+        console.log(crypto.encrypt(text));
+        console.log(crypto.decrypt(crypto.encrypt(text)));
+        return crypto.encrypt(text);
     }
     "#;
     let mut core = BookCore::init(js.to_string());

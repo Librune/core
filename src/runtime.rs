@@ -2,7 +2,7 @@ use boa_engine::{js_string, property::Attribute};
 use boa_runtime::Console;
 
 use crate::{
-    crypto::crypto::{define_aes_crypto, define_decrypt, define_encrypt},
+    crypto::crypto::define_aes_crypto,
     env::env::regist_envs,
     global::{
         uuid::{regist_is_uuid, regist_uuid},
@@ -28,8 +28,6 @@ pub fn init_runtime(core: &mut BookCore) {
     regist_envs(context);
     define_request(context);
     define_scraper(context);
-    define_encrypt(context);
-    define_decrypt(context);
     define_aes_crypto(context);
     regist_xml_to_json(context);
     regist_uuid(context);
