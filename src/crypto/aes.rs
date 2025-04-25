@@ -43,31 +43,31 @@ impl Aes {
             return Err(js_error!("options 不能为空"));
         }
         let options = options.as_object().unwrap();
-        let cipher_mode = if let Ok(mode) = options.get(js_string!("cipher_mode"), ctx) {
+        let cipher_mode = if let Ok(mode) = options.get(js_string!("cipherMode"), ctx) {
             let val_str = mode.to_string(ctx)?.to_std_string_escaped();
             match val_str.as_str() {
                 "cbc" => CipherMode::Cbc,
                 "cfb" => CipherMode::Cfb,
                 "ofb" => CipherMode::Ofb,
-                _ => return Err(js_error!("不支持的 cipher_mode")),
+                _ => return Err(js_error!("不支持的 cipherMode")),
             }
         } else {
-            return Err(js_error!("cipher_mode 不能为空"));
+            return Err(js_error!("cipherMode 不能为空"));
         };
         // 读取 aes_type
-        let aes_type = if let Ok(aes_type) = options.get(js_string!("aes_type"), ctx) {
+        let aes_type = if let Ok(aes_type) = options.get(js_string!("aesType"), ctx) {
             let val_str = aes_type.to_string(ctx).unwrap().to_std_string_escaped();
             match val_str.as_str() {
                 "aes128" => AesType::Aes128,
                 "aes192" => AesType::Aes192,
                 "aes256" => AesType::Aes256,
-                _ => return Err(js_error!("不支持的 aes_type")),
+                _ => return Err(js_error!("不支持的 aesType")),
             }
         } else {
-            return Err(js_error!("aes_type 不能为空"));
+            return Err(js_error!("aesType 不能为空"));
         };
         // 读取 padding_type
-        let padding_type = if let Ok(padding_type) = options.get(js_string!("padding_type"), ctx) {
+        let padding_type = if let Ok(padding_type) = options.get(js_string!("paddingType"), ctx) {
             let val_str = padding_type.to_string(ctx).unwrap().to_std_string_escaped();
             match val_str.as_str() {
                 "nopadding" => PaddingType::NoPadding,
@@ -76,10 +76,10 @@ impl Aes {
                 "iso10126" => PaddingType::Iso10126,
                 "ansix923" => PaddingType::AnsiX923,
                 "iso7816" => PaddingType::Iso7816,
-                _ => return Err(js_error!("不支持的 padding_type")),
+                _ => return Err(js_error!("不支持的 paddingType")),
             }
         } else {
-            return Err(js_error!("padding_type 不能为空"));
+            return Err(js_error!("paddingType 不能为空"));
         };
         // 读取 encoding
         let encoding = if let Ok(encoding) = options.get(js_string!("encoding"), ctx) {
