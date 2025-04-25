@@ -1,6 +1,7 @@
 use aes::cipher::block_padding::Pkcs7;
 use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use boa_engine::object::builtins::JsArray;
 use boa_engine::{
     class::Class, js_error, js_string, Context, JsData, JsNativeError, JsObject, JsResult, JsValue,
     NativeFunction,
@@ -97,16 +98,37 @@ impl Decrypt {
             };
         }
         // 读取 iv
-        let mut iv: Option<Vec<u8>> = None;
-        if let Ok(_iv) = options.get(js_string!("iv"), ctx) {
-            let iv_str = _iv.to_string(ctx)?.to_std_string_escaped();
-            iv = Some(
-                iv_str
+        let iv: Option<Vec<u8>> = if let Ok(_iv) = options.get(js_string!("iv"), ctx) {
+            if _iv.is_string() {
+                let _iv_str = _iv.to_string(ctx)?.to_std_string_escaped();
+                // 转 hex
+                let vec = _iv_str
+                    .as_str()
                     .chars()
-                    .map(|c| c.to_digit(10).unwrap() as u8)
-                    .collect(),
-            );
-        }
+                    .map(|c| c.to_digit(16).unwrap() as u8)
+                    .collect::<Vec<u8>>();
+                Some(vec)
+            } else if _iv.is_object() && _iv.as_object().unwrap().is_array() {
+                let len = _iv.to_length(ctx)? as usize;
+                let mut iv = vec![0u8; len];
+                let arr = JsArray::from_object(_iv.as_object().unwrap().clone())?;
+                for i in 0..len {
+                    let item = arr.get(i, ctx)?;
+                    iv[i] = item.to_number(ctx)? as u8;
+                }
+                Some(iv)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        println!(
+            "cipher_mode: {:?}, aes_type: {:?}, padding_type: {:?}, encoding: {:?}, key: {:?}, key_derivation: {:?}, iv: {:?}",
+            cipher_mode, aes_type, padding_type, encoding, key, key_derivation, iv
+        );
+
         Ok(Self {
             cipher_mode: cipher_mode,
             aes_type: aes_type,
@@ -289,14 +311,30 @@ impl Encrypt {
         //     KeyDerivation::Raw
         // };
         // 读取 iv
-        let iv = if let Ok(iv) = options.get(js_string!("iv"), ctx) {
-            let val_str = iv.to_string(ctx).unwrap().to_std_string_escaped();
-            Some(
-                val_str
-                    .chars()
-                    .map(|c| c.to_digit(10).unwrap() as u8)
-                    .collect(),
-            )
+        let iv: Option<Vec<u8>> = if let Ok(_iv) = options.get(js_string!("iv"), ctx) {
+            if _iv.is_string() {
+                let _iv_str = _iv.to_string(ctx)?.to_std_string_escaped();
+                // 转 hex
+                let vec = _iv_str.as_str().bytes().collect::<Vec<u8>>();
+                Some(vec)
+            } else if _iv.is_object() && _iv.as_object().unwrap().is_array() {
+                let len = _iv
+                    .as_object()
+                    .unwrap()
+                    .get(js_string!("length"), ctx)?
+                    .to_number(ctx)? as usize;
+                let mut iv = vec![0u8; len];
+                let obj = _iv.as_object().unwrap();
+                for i in 0..len {
+                    iv[i] = obj
+                        .get(i, ctx)
+                        .map_err(|_| js_error!("iv 读取失败"))?
+                        .to_number(ctx)? as u8;
+                }
+                Some(iv)
+            } else {
+                None
+            }
         } else {
             None
         };
