@@ -13,7 +13,7 @@ pub enum CipherMode {
 #[derive(Debug, Clone, Trace, Finalize)]
 pub enum AesType {
     Aes128,
-    // Aes192,
+    Aes192,
     Aes256,
 }
 
