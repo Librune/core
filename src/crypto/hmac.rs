@@ -6,6 +6,7 @@ use boa_engine::{
 };
 use boa_gc::{Finalize, Trace};
 use hmac::Mac;
+use md5::Md5;
 use sha1::Sha1;
 use sha2::{Sha256, Sha384, Sha512};
 
@@ -13,9 +14,11 @@ type Hmac384 = hmac::Hmac<Sha384>;
 type HmacSha256 = hmac::Hmac<Sha256>;
 type Hmac512 = hmac::Hmac<Sha512>;
 type HmacSha1 = hmac::Hmac<Sha1>;
+type HmacMd5 = hmac::Hmac<Md5>;
 
 #[derive(Debug, Trace, Finalize, JsData)]
 enum HmacHash {
+    Md5,
     Sha1,
     Sha256,
     Sha384,
@@ -46,6 +49,7 @@ impl Hmac {
         let hash = if hash.is_string() {
             let hash = hash.to_string(ctx)?.to_std_string_escaped();
             match hash.as_str() {
+                "md5" => HmacHash::Md5,
                 "sha1" => HmacHash::Sha1,
                 "sha256" => HmacHash::Sha256,
                 "sha384" => HmacHash::Sha384,
@@ -107,6 +111,11 @@ impl Hmac {
             }
             HmacHash::Sha1 => {
                 let mut hmac = HmacSha1::new_from_slice(hmac_key).unwrap();
+                hmac.update(plaintext);
+                hmac.finalize().into_bytes().to_vec()
+            }
+            HmacHash::Md5 => {
+                let mut hmac = HmacMd5::new_from_slice(hmac_key).unwrap();
                 hmac.update(plaintext);
                 hmac.finalize().into_bytes().to_vec()
             }

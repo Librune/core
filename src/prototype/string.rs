@@ -1,3 +1,4 @@
+ 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use boa_engine::{
     js_string,
@@ -6,6 +7,7 @@ use boa_engine::{
     Context, JsError, JsValue, NativeFunction,
 };
 use encoding_rs::GBK; 
+use md5::Md5;
 use percent_encoding::percent_encode;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
  
@@ -50,8 +52,12 @@ fn register_to_md5(context: &mut Context) -> Result<bool, JsError> {
     let func = NativeFunction::from_fn_ptr(|this, _args, context| {
         // 将调用对象转换为字符串
         let this_str = this.to_string(context)?;
-        // 使用 md5 包计算 MD5 值，并格式化为 16 进制字符串
-        let digest = format!("{:x}", md5::compute(this_str.to_std_string_escaped()));
+        let mut hasher = Md5::new();
+        hasher.update(this_str.to_std_string_escaped());
+        let digest =  hasher.finalize() 
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
         Ok(JsValue::String(digest.into()))
     });
     register(context, "toMd5", func)
@@ -68,17 +74,6 @@ fn register_to_ascii(context: &mut Context) -> Result<bool, JsError> {
         )))
     });
     register(context, "toAscii", func)
-}
-
-fn register_to_hex(context: &mut Context) -> Result<bool, JsError> {
-    let func = NativeFunction::from_fn_ptr(|this, _args, context| {
-        // 将调用对象转换为字符串
-        let this_str = this.to_string(context)?.to_std_string_escaped();
-        // 使用 md5 包计算 MD5 值，并格式化为 16 进制字符串
-        let digest = format!("{:x}", md5::compute(this_str));
-        Ok(JsValue::String(digest.into()))
-    });
-    register(context, "toHex", func)
 }
 
 fn register_to_sha224(context: &mut Context) -> Result<bool, JsError> {
@@ -152,7 +147,6 @@ pub fn extend_string(ctx: &mut Context) {
     register_to_md5(ctx).expect("Failed to register toMD5 function");
     // Register the toHex function to the String prototype
     register_to_ascii(ctx).expect("Failed to register toAscii function");
-    register_to_hex(ctx).expect("Failed to register toHex function");
     register_to_sha224(ctx).expect("Failed to register toSha224 function");
     register_to_sha256(ctx).expect("Failed to register toSha256 function");
     register_to_sha384(ctx).expect("Failed to register toSha384 function");

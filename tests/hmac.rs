@@ -11,7 +11,7 @@ fn test_hmac() {
             encoding: "base64"
         });
         const res = hmac.update(text);
-        console.log(res);
+        console.log("res".toMd5());
         return res;
     }
     "#;
