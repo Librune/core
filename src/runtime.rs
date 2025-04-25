@@ -2,7 +2,7 @@ use boa_engine::{js_string, property::Attribute};
 use boa_runtime::Console;
 
 use crate::{
-    crypto::crypto::define_aes_crypto,
+    crypto::aes::define_aes_crypto,
     env::env::regist_envs,
     global::{
         uuid::{regist_is_uuid, regist_uuid},

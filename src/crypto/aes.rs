@@ -27,7 +27,7 @@ type Aes256CfbEnc = cfb_mode::Encryptor<aes::Aes256>;
 
 #[derive(Debug, Trace, Finalize, JsData)]
 
-struct AesCrypto {
+struct Aes {
     cipher_mode: CipherMode,
     aes_type: AesType,
     padding_type: PaddingType,
@@ -36,7 +36,7 @@ struct AesCrypto {
     iv: Vec<u8>,
 }
 
-impl AesCrypto {
+impl Aes {
     pub fn form_js_value(_this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<Self> {
         let options = args.get(0).unwrap();
         if options.is_null_or_undefined() {
@@ -472,8 +472,8 @@ impl AesCrypto {
     }
 }
 
-impl Class for AesCrypto {
-    const NAME: &'static str = "AesCrypto";
+impl Class for Aes {
+    const NAME: &'static str = "Aes";
     const LENGTH: usize = 1;
     fn data_constructor(_this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<Self> {
         let crypto = Self::form_js_value(_this, args, ctx)?;
@@ -496,6 +496,6 @@ impl Class for AesCrypto {
 
 pub fn define_aes_crypto(context: &mut Context) {
     context
-        .register_global_class::<AesCrypto>()
-        .expect("the AesCrypto builtin shouldn't exist");
+        .register_global_class::<Aes>()
+        .expect("the Aes builtin shouldn't exist");
 }
