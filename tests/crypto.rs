@@ -62,14 +62,14 @@ fn test_crypto_aes128_pkcs7() {
 fn test_crypto_aes192_pkcs7() {
     let js = r#"
     function test(){
-        let text = "Hello, World!";
+        let text = "你好";
         let key = "12345678901234567890123456789012";
         let iv = "0000000000000000";
         console.log(iv.toAscii())
         iv = iv.toAscii();
         let crypto = new AesCrypto({
             cipher_mode: "cbc",
-            aes_type: "aes192",
+            aes_type: "aes256",
             padding_type: "pkcs7",
             encoding: "base64",
             key: key,

@@ -1,5 +1,5 @@
 use aes::cipher::block_padding::{AnsiX923, Iso10126, Iso7816, NoPadding, Pkcs7, ZeroPadding};
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit, StreamCipher};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use boa_engine::{
     class::Class, js_error, js_string, Context, JsData, JsNativeError, JsObject, JsResult, JsValue,
@@ -9,12 +9,21 @@ use boa_gc::{Finalize, Trace};
 
 use super::enums::{AesType, CipherMode, Encoding, PaddingType};
 
+type Aes128Ofb = ofb::Ofb<aes::Aes128>;
+type Aes192Ofb = ofb::Ofb<aes::Aes192>;
+type Aes256Ofb = ofb::Ofb<aes::Aes256>;
 type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;
+type Aes128CfbDec = cfb_mode::Decryptor<aes::Aes128>;
 type Aes192CbcDec = cbc::Decryptor<aes::Aes192>;
+type Aes192CfbDec = cfb_mode::Decryptor<aes::Aes192>;
 type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
+type Aes256CfbDec = cfb_mode::Decryptor<aes::Aes256>;
 type Aes128CbcEnc = cbc::Encryptor<aes::Aes128>;
+type Aes128CfbEnc = cfb_mode::Encryptor<aes::Aes128>;
 type Aes192CbcEnc = cbc::Encryptor<aes::Aes192>;
+type Aes192CfbEnc = cfb_mode::Encryptor<aes::Aes192>;
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
+type Aes256CfbEnc = cfb_mode::Encryptor<aes::Aes256>;
 
 #[derive(Debug, Trace, Finalize, JsData)]
 
@@ -38,6 +47,8 @@ impl AesCrypto {
             let val_str = mode.to_string(ctx)?.to_std_string_escaped();
             match val_str.as_str() {
                 "cbc" => CipherMode::Cbc,
+                "cfb" => CipherMode::Cfb,
+                "ofb" => CipherMode::Ofb,
                 _ => return Err(js_error!("不支持的 cipher_mode")),
             }
         } else {
@@ -165,6 +176,61 @@ impl AesCrypto {
         }
     }
 
+    fn encrypt_cfb(
+        key: &[u8],
+        iv: &[u8],
+        buf: &mut [u8],
+        aes_type: &AesType,
+        padding_type: &PaddingType,
+    ) -> JsResult<Vec<u8>> {
+        match aes_type {
+            AesType::Aes128 => {
+                let key = &key[..16];
+                let cipher = Aes128CfbEnc::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes128 cfb new error"))?;
+                Self::encrypt_with_padding(cipher, buf, 0, padding_type)
+            }
+            AesType::Aes192 => {
+                let key = &key[..24];
+                let cipher = Aes192CfbEnc::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes192 cfb new error"))?;
+                Self::encrypt_with_padding(cipher, buf, 0, padding_type)
+            }
+            AesType::Aes256 => {
+                let key = &key[..32];
+                let cipher = Aes256CfbEnc::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes256 cfb new error"))?;
+                Self::encrypt_with_padding(cipher, buf, 0, padding_type)
+            }
+        }
+    }
+
+    fn encrypt_ofb(key: &[u8], iv: &[u8], buf: &mut [u8], aes_type: &AesType) -> JsResult<Vec<u8>> {
+        match aes_type {
+            AesType::Aes128 => {
+                let key = &key[..16];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes128Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+            AesType::Aes192 => {
+                let key = &key[..24];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes192Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+            AesType::Aes256 => {
+                let key = &key[..32];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes256Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+        }
+    }
+
     // 使用泛型处理不同的填充模式和加密器
     fn encrypt_with_padding<C>(
         cipher: C,
@@ -216,8 +282,8 @@ impl AesCrypto {
             })?;
         let origin_text = args.get(0).unwrap().to_string(ctx)?.to_std_string_escaped();
         let plaintext = origin_text.as_bytes();
-        let mut buf = [0u8; 48];
         let pt_len = plaintext.len();
+        let mut buf = vec![0u8; pt_len + 16];
         buf[..pt_len].copy_from_slice(plaintext);
         let encrypted = match options.cipher_mode {
             CipherMode::Cbc => Self::encrypt_cbc(
@@ -228,6 +294,16 @@ impl AesCrypto {
                 &options.aes_type,
                 &options.padding_type,
             )?,
+            CipherMode::Cfb => Self::encrypt_cfb(
+                &options.key,
+                &options.iv,
+                &mut buf,
+                &options.aes_type,
+                &options.padding_type,
+            )?,
+            CipherMode::Ofb => {
+                Self::encrypt_ofb(&options.key, &options.iv, &mut buf, &options.aes_type)?
+            }
         };
         let encrypted_str = Self::encode_result(&encrypted, &options.encoding);
         Ok(js_string!(encrypted_str).into())
@@ -261,6 +337,62 @@ impl AesCrypto {
             }
         }
     }
+
+    fn decrypt_cfb(
+        key: &[u8],
+        iv: &[u8],
+        buf: &mut [u8],
+        aes_type: &AesType,
+        padding_type: &PaddingType,
+    ) -> JsResult<Vec<u8>> {
+        match aes_type {
+            AesType::Aes128 => {
+                let key = &key[..16];
+                let cipher = Aes128CfbDec::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes128 cfb new error"))?;
+                Self::decrypt_with_padding(cipher, buf, padding_type)
+            }
+            AesType::Aes192 => {
+                let key = &key[..24];
+                let cipher = Aes192CfbDec::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes192 cfb new error"))?;
+                Self::decrypt_with_padding(cipher, buf, padding_type)
+            }
+            AesType::Aes256 => {
+                let key = &key[..32];
+                let cipher = Aes256CfbDec::new_from_slices(key, iv)
+                    .map_err(|_| js_error!("aes256 cfb new error"))?;
+                Self::decrypt_with_padding(cipher, buf, padding_type)
+            }
+        }
+    }
+
+    fn decrypt_ofb(key: &[u8], iv: &[u8], buf: &mut [u8], aes_type: &AesType) -> JsResult<Vec<u8>> {
+        match aes_type {
+            AesType::Aes128 => {
+                let key = &key[..16];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes128Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+            AesType::Aes192 => {
+                let key = &key[..24];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes192Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+            AesType::Aes256 => {
+                let key = &key[..32];
+                let mut buf1 = vec![0u8; buf.len()];
+                let mut cipher = Aes256Ofb::new(key.into(), iv.into());
+                cipher.apply_keystream_b2b(buf, &mut buf1).unwrap();
+                Ok(buf1)
+            }
+        }
+    }
+
     // 使用泛型处理不同的填充模式和解密器
     fn decrypt_with_padding<C>(
         cipher: C,
@@ -319,6 +451,19 @@ impl AesCrypto {
                 &mut encrypted_bytes.clone(),
                 &options.aes_type,
                 &options.padding_type,
+            )?,
+            CipherMode::Cfb => Self::decrypt_cfb(
+                &options.key,
+                &options.iv,
+                &mut encrypted_bytes.clone(),
+                &options.aes_type,
+                &options.padding_type,
+            )?,
+            CipherMode::Ofb => Self::decrypt_ofb(
+                &options.key,
+                &options.iv,
+                &mut encrypted_bytes.clone(),
+                &options.aes_type,
             )?,
         };
         let decrypted_str =

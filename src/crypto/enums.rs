@@ -5,8 +5,8 @@ use boa_gc::{Finalize, Trace};
 pub enum CipherMode {
     // Ecb,
     Cbc,
-    // Cfb,
-    // Ofb,
+    Cfb,
+    Ofb,
 }
 
 // AES 类型
