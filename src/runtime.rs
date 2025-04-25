@@ -5,6 +5,7 @@ use crate::{
     crypto::aes::define_aes_crypto,
     env::env::regist_envs,
     global::{
+        rand_str::regist_rand_str,
         uuid::{regist_is_uuid, regist_uuid},
         xml2json::regist_xml_to_json,
     },
@@ -30,6 +31,7 @@ pub fn init_runtime(core: &mut BookCore) {
     define_scraper(context);
     define_aes_crypto(context);
     regist_xml_to_json(context);
+    regist_rand_str(context);
     regist_uuid(context);
     regist_is_uuid(context);
     extend_string(context);
