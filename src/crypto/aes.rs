@@ -1,5 +1,6 @@
 use aes::cipher::block_padding::{AnsiX923, Iso10126, Iso7816, NoPadding, Pkcs7, ZeroPadding};
 use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit, StreamCipher};
+use base64::prelude::BASE64_STANDARD;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use boa_engine::{
     class::Class, js_error, js_string, Context, JsData, JsNativeError, JsObject, JsResult, JsValue,
@@ -94,8 +95,27 @@ impl Aes {
         };
         // 读取 key
         let key = if let Ok(key) = options.get(js_string!("key"), ctx) {
-            let val_str = key.to_string(ctx).unwrap().to_std_string_escaped();
-            val_str.into_bytes()
+            if key.is_object() && key.as_object().unwrap().is_array() {
+                // jsarray to vec8
+                let len = key
+                    .as_object()
+                    .unwrap()
+                    .get(js_string!("length"), ctx)?
+                    .to_number(ctx)? as usize;
+                let mut key_buf = vec![0u8; len];
+                for i in 0..len {
+                    key_buf[i] = key
+                        .as_object()
+                        .unwrap()
+                        .get(i, ctx)
+                        .map_err(|_| js_error!("key 读取失败"))?
+                        .to_number(ctx)? as u8;
+                }
+                key_buf
+            } else {
+                let val_str = key.to_string(ctx).unwrap().to_std_string_escaped();
+                val_str.into_bytes()
+            }
         } else {
             return Err(js_error!("key 不能为空"));
         };
@@ -331,7 +351,7 @@ impl Aes {
             }
             AesType::Aes256 => {
                 let key = &key[..32];
-                let cipher = Aes256CbcDec::new_from_slices(key, iv)
+                let cipher = Aes256CbcDec::new_from_slices(&key, iv)
                     .map_err(|_| js_error!("aes256 cbc new error"))?;
                 Self::decrypt_with_padding(cipher, buf, padding_type)
             }
@@ -425,14 +445,14 @@ impl Aes {
         .to_vec())
     }
     // 处理结果编码
-    fn decode_result(data: &[u8], encoding: &Encoding) -> JsResult<Vec<u8>> {
-        match encoding {
-            Encoding::Base64 => BASE64
-                .decode(data)
-                .map_err(|_| js_error!("base64 decode error")),
-            Encoding::Hex => hex::decode(data).map_err(|_| js_error!("hex decode error")),
-        }
-    }
+    // fn decode_result(data: &[u8], encoding: &Encoding) -> JsResult<Vec<u8>> {
+    //     match encoding {
+    //         Encoding::Base64 => BASE64
+    //             .decode(data)
+    //             .map_err(|_| js_error!("base64 decode error")),
+    //         Encoding::Hex => hex::decode(data).map_err(|_| js_error!("hex decode error")),
+    //     }
+    // }
 
     fn decrypt(this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
         let options = this
@@ -443,26 +463,31 @@ impl Aes {
                     .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
             })?;
         let encrypted_data = args.get(0).unwrap().to_string(ctx)?.to_std_string_escaped();
-        let encrypted_bytes = Self::decode_result(encrypted_data.as_bytes(), &options.encoding)?;
+        let mut encrypted_bytes = match options.encoding {
+            Encoding::Base64 => BASE64_STANDARD.decode(&encrypted_data).unwrap(),
+            Encoding::Hex => {
+                hex::decode(encrypted_data.as_bytes()).map_err(|_| js_error!("hex decode error"))?
+            }
+        };
         let decrypted = match options.cipher_mode {
             CipherMode::Cbc => Self::decrypt_cbc(
                 &options.key,
                 &options.iv,
-                &mut encrypted_bytes.clone(),
+                &mut encrypted_bytes,
                 &options.aes_type,
                 &options.padding_type,
             )?,
             CipherMode::Cfb => Self::decrypt_cfb(
                 &options.key,
                 &options.iv,
-                &mut encrypted_bytes.clone(),
+                &mut encrypted_bytes,
                 &options.aes_type,
                 &options.padding_type,
             )?,
             CipherMode::Ofb => Self::decrypt_ofb(
                 &options.key,
                 &options.iv,
-                &mut encrypted_bytes.clone(),
+                &mut encrypted_bytes,
                 &options.aes_type,
             )?,
         };
