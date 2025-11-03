@@ -83,6 +83,7 @@ impl ResponseCache {
     /// # 参数
     ///
     /// * `key` - 缓存键
+    #[allow(dead_code)]
     pub fn remove(&self, key: &str) {
         let mut cache = self.cache.write().unwrap();
         cache.remove(key);
@@ -91,24 +92,28 @@ impl ResponseCache {
     /// 清除所有过期的缓存项
     ///
     /// 这个方法应该定期调用以释放内存
+    #[allow(dead_code)]
     pub fn clean_expired(&self) {
         let mut cache = self.cache.write().unwrap();
         cache.retain(|_, entry| !entry.is_expired());
     }
 
     /// 清空所有缓存
+    #[allow(dead_code)]
     pub fn clear(&self) {
         let mut cache = self.cache.write().unwrap();
         cache.clear();
     }
 
     /// 获取缓存项数量
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         let cache = self.cache.read().unwrap();
         cache.len()
     }
 
     /// 检查缓存是否为空
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         let cache = self.cache.read().unwrap();
         cache.is_empty()

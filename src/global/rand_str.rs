@@ -17,6 +17,7 @@ pub fn register_rand_str(ctx: &mut Context) {
 
 // 向后兼容的别名
 #[deprecated(since = "0.2.0", note = "Use `register_rand_str` instead")]
+#[allow(dead_code)]
 pub fn regist_rand_str(ctx: &mut Context) {
     register_rand_str(ctx);
 }

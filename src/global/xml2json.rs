@@ -23,6 +23,7 @@ pub fn register_xml_to_json(ctx: &mut Context) {
 
 // 向后兼容的别名
 #[deprecated(since = "0.2.0", note = "Use `register_xml_to_json` instead")]
+#[allow(dead_code)]
 pub fn regist_xml_to_json(ctx: &mut Context) {
     register_xml_to_json(ctx);
 }

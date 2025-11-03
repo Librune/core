@@ -35,11 +35,13 @@ pub fn register_is_uuid(ctx: &mut Context) {
 
 // 向后兼容的别名
 #[deprecated(since = "0.2.0", note = "Use `register_uuid` instead")]
+#[allow(dead_code)]
 pub fn regist_uuid(ctx: &mut Context) {
     register_uuid(ctx);
 }
 
 #[deprecated(since = "0.2.0", note = "Use `register_is_uuid` instead")]
+#[allow(dead_code)]
 pub fn regist_is_uuid(ctx: &mut Context) {
     register_is_uuid(ctx);
 }
