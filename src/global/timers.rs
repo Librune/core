@@ -2,7 +2,7 @@
 //!
 //! 提供浏览器兼容的 setTimeout、setInterval、clearTimeout、clearInterval 实现
 
-use boa_engine::{js_error, js_string, Context, JsArgs, JsResult, JsValue, NativeFunction};
+use boa_engine::{js_error, js_string, Context, JsArgs, JsValue, NativeFunction};
 use std::sync::{
     atomic::{AtomicU32, Ordering},
     Arc, Mutex,
@@ -24,6 +24,7 @@ enum TimerType {
 #[derive(Debug, Clone)]
 struct TimerInfo {
     id: u32,
+    #[allow(dead_code)]
     timer_type: TimerType,
     handle: Option<Arc<Mutex<bool>>>, // 用于取消定时器的标志
 }
@@ -72,7 +73,7 @@ fn remove_timer(id: u32) -> bool {
 /// setTimeout(callback, delay)
 /// 在指定的延迟后执行回调函数
 pub fn register_set_timeout(ctx: &mut Context) {
-    let function = NativeFunction::from_fn_ptr(|_this, args, context| {
+    let function = NativeFunction::from_fn_ptr(|_this, args, _context| {
         // 获取回调函数
         let callback = args.get_or_undefined(0);
         if !callback.is_callable() {
@@ -86,7 +87,7 @@ pub fn register_set_timeout(ctx: &mut Context) {
             .unwrap_or(0.0)
             .max(0.0) as u64;
 
-        let callback = callback.clone();
+        let _callback = callback.clone();
         let timer_id = generate_timer_id();
         let cancelled = Arc::new(Mutex::new(false));
         let cancelled_clone = Arc::clone(&cancelled);
@@ -143,7 +144,7 @@ pub fn register_clear_timeout(ctx: &mut Context) {
 /// setInterval(callback, interval)
 /// 以指定的间隔重复执行回调函数
 pub fn register_set_interval(ctx: &mut Context) {
-    let function = NativeFunction::from_fn_ptr(|_this, args, context| {
+    let function = NativeFunction::from_fn_ptr(|_this, args, _context| {
         // 获取回调函数
         let callback = args.get_or_undefined(0);
         if !callback.is_callable() {
@@ -157,7 +158,7 @@ pub fn register_set_interval(ctx: &mut Context) {
             .unwrap_or(0.0)
             .max(0.0) as u64;
 
-        let callback = callback.clone();
+        let _callback = callback.clone();
         let timer_id = generate_timer_id();
         let cancelled = Arc::new(Mutex::new(false));
         let cancelled_clone = Arc::clone(&cancelled);

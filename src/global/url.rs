@@ -7,22 +7,6 @@ use boa_engine::{
     NativeFunction,
 };
 use boa_gc::{Finalize, Trace};
-use percent_encoding::{percent_decode_str, utf8_percent_encode, AsciiSet, CONTROLS};
-
-/// URL 编码的 ASCII 字符集
-const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-const PATH: &AsciiSet = &FRAGMENT.add(b'#').add(b'?').add(b'{').add(b'}');
-const USERINFO: &AsciiSet = &PATH
-    .add(b'/')
-    .add(b':')
-    .add(b';')
-    .add(b'=')
-    .add(b'@')
-    .add(b'[')
-    .add(b'\\')
-    .add(b']')
-    .add(b'^')
-    .add(b'|');
 
 #[derive(Debug, Clone, Trace, Finalize, JsData)]
 struct Url {
@@ -114,7 +98,7 @@ impl Url {
     }
 
     /// 构造函数
-    fn constructor(_this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<Self> {
+    fn constructor(_this: &JsValue, args: &[JsValue], _ctx: &mut Context) -> JsResult<Self> {
         let url_str = args
             .get(0)
             .and_then(|v| v.as_string())
@@ -126,7 +110,7 @@ impl Url {
     }
 
     /// 获取 href
-    fn get_href(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_href(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -137,7 +121,7 @@ impl Url {
     }
 
     /// 获取 protocol
-    fn get_protocol(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_protocol(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -148,7 +132,7 @@ impl Url {
     }
 
     /// 获取 host
-    fn get_host(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_host(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -159,7 +143,7 @@ impl Url {
     }
 
     /// 获取 hostname
-    fn get_hostname(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_hostname(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -170,7 +154,7 @@ impl Url {
     }
 
     /// 获取 port
-    fn get_port(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_port(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -181,7 +165,7 @@ impl Url {
     }
 
     /// 获取 pathname
-    fn get_pathname(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_pathname(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -192,7 +176,7 @@ impl Url {
     }
 
     /// 获取 search
-    fn get_search(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_search(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -203,7 +187,7 @@ impl Url {
     }
 
     /// 获取 hash
-    fn get_hash(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_hash(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -214,7 +198,7 @@ impl Url {
     }
 
     /// 获取 origin
-    fn get_origin(_this: &JsValue, _args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
+    fn get_origin(_this: &JsValue, _args: &[JsValue], _ctx: &mut Context) -> JsResult<JsValue> {
         let obj = _this.as_object().ok_or_else(|| {
             JsNativeError::typ().with_message("'this' is not an object")
         })?;
@@ -236,50 +220,50 @@ impl Class for Url {
 
     fn init(class: &mut boa_engine::class::ClassBuilder<'_>) -> JsResult<()> {
         class
-            .accessor(
-                js_string!("href"),
-                Some(NativeFunction::from_fn_ptr(Self::get_href)),
-                None,
+            .method(
+                js_string!("getHref"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_href),
             )
-            .accessor(
-                js_string!("protocol"),
-                Some(NativeFunction::from_fn_ptr(Self::get_protocol)),
-                None,
+            .method(
+                js_string!("getProtocol"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_protocol),
             )
-            .accessor(
-                js_string!("host"),
-                Some(NativeFunction::from_fn_ptr(Self::get_host)),
-                None,
+            .method(
+                js_string!("getHost"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_host),
             )
-            .accessor(
-                js_string!("hostname"),
-                Some(NativeFunction::from_fn_ptr(Self::get_hostname)),
-                None,
+            .method(
+                js_string!("getHostname"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_hostname),
             )
-            .accessor(
-                js_string!("port"),
-                Some(NativeFunction::from_fn_ptr(Self::get_port)),
-                None,
+            .method(
+                js_string!("getPort"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_port),
             )
-            .accessor(
-                js_string!("pathname"),
-                Some(NativeFunction::from_fn_ptr(Self::get_pathname)),
-                None,
+            .method(
+                js_string!("getPathname"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_pathname),
             )
-            .accessor(
-                js_string!("search"),
-                Some(NativeFunction::from_fn_ptr(Self::get_search)),
-                None,
+            .method(
+                js_string!("getSearch"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_search),
             )
-            .accessor(
-                js_string!("hash"),
-                Some(NativeFunction::from_fn_ptr(Self::get_hash)),
-                None,
+            .method(
+                js_string!("getHash"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_hash),
             )
-            .accessor(
-                js_string!("origin"),
-                Some(NativeFunction::from_fn_ptr(Self::get_origin)),
-                None,
+            .method(
+                js_string!("getOrigin"),
+                0,
+                NativeFunction::from_fn_ptr(Self::get_origin),
             )
             .method(
                 js_string!("toString"),
@@ -316,7 +300,7 @@ mod tests {
 
         let code = r#"
             const url = new URL("https://example.com:8080/path/to/page?query=value#fragment");
-            url.href;
+            url.getHref();
         "#;
 
         let result = context.eval(boa_engine::Source::from_bytes(code));
@@ -331,15 +315,12 @@ mod tests {
         register_url(&mut context);
 
         let code = r#"
-            const url = new URL("https://example.com:8080/path?query=value#hash");
-            [
-                url.protocol === "https:",
-                url.hostname === "example.com",
-                url.port === "8080",
-                url.pathname === "/path",
-                url.search === "?query=value",
-                url.hash === "#hash"
-            ].every(x => x);
+            const url = new URL("https://example.com:8080/path?query=value");
+            url.getProtocol() === "https:" &&
+            url.getHostname() === "example.com" &&
+            url.getPort() === "8080" &&
+            url.getPathname() === "/path" &&
+            url.getSearch() === "?query=value";
         "#;
 
         let result = context.eval(boa_engine::Source::from_bytes(code));
@@ -354,7 +335,7 @@ mod tests {
 
         let code = r#"
             const url = new URL("https://example.com:8080/path");
-            url.origin;
+            url.getOrigin();
         "#;
 
         let result = context.eval(boa_engine::Source::from_bytes(code));

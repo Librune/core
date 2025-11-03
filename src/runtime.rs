@@ -9,6 +9,7 @@ use crate::{
         encoding::register_encoding_apis,
         rand_str::register_rand_str,
         timers::register_timer_apis,
+        url::register_url,
         uuid::{register_is_uuid, register_uuid},
         xml2json::register_xml_to_json,
     },
@@ -49,6 +50,7 @@ pub fn init_runtime(core: &mut BookCore) {
     // 注册浏览器兼容 API
     register_encoding_apis(context);
     register_timer_apis(context);
+    register_url(context);
 
     // 扩展 JavaScript 原型
     extend_string(context);

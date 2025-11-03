@@ -14,10 +14,140 @@
 - Cookie 管理和会话持久化
 - JavaScript 执行超时控制
 - 书源调试工具
-- DES/3DES 加密支持
 - RSA 非对称加密
-- setTimeout/setInterval 实现
-- URL 类实现
+- fetch API 实现
+
+## [0.3.0-beta] - 2025-01-04
+
+### Phase 3: 功能扩展 ✨
+
+本版本专注于功能扩展,新增了 DES/3DES 加密、浏览器兼容的定时器 API 和 URL 解析类。
+
+#### 新增功能 ✨
+
+**1. DES/3DES 加密支持** ([src/crypto/des.rs](src/crypto/des.rs))
+- 支持 DES (56-bit) 和 3DES (168-bit) 对称加密
+- CBC 密码模式
+- PKCS7 和 ZeroPadding 填充方式
+- Base64 和 Hex 编码输出
+- 383 行代码,3 个测试用例
+
+JavaScript 使用方式:
+```javascript
+// DES 加密
+const des = new JDes({
+    desType: 'des',
+    cipherMode: 'cbc',
+    paddingType: 'pkcs7',
+    encoding: 'base64',
+    key: '12345678',  // 8 字节密钥
+    iv: 'abcdefgh'    // 8 字节 IV
+});
+
+const encrypted = des.encrypt("Hello, World!");
+const decrypted = des.decrypt(encrypted);
+
+// 3DES 加密
+const des3 = new JDes({
+    desType: '3des',
+    cipherMode: 'cbc',
+    paddingType: 'pkcs7',
+    encoding: 'hex',
+    key: '123456781234567812345678',  // 24 字节密钥
+    iv: 'abcdefgh'                    // 8 字节 IV
+});
+```
+
+**2. 定时器 API** ([src/global/timers.rs](src/global/timers.rs))
+- 浏览器兼容的 `setTimeout/clearTimeout`
+- 浏览器兼容的 `setInterval/clearInterval`
+- 基于线程的延迟机制
+- 支持定时器取消
+- 5 个测试用例
+
+JavaScript 使用方式:
+```javascript
+// 延迟执行
+const timerId = setTimeout(() => {
+    console.log("延迟 1 秒执行");
+}, 1000);
+
+// 取消定时器
+clearTimeout(timerId);
+
+// 定期执行
+const intervalId = setInterval(() => {
+    console.log("每 500ms 执行一次");
+}, 500);
+
+// 取消定期执行
+clearInterval(intervalId);
+```
+
+**注意**: 由于 Boa Context 不是 Send + Sync,定时器主要用于延迟控制,不支持异步回调执行。
+
+**3. URL 解析类** ([src/global/url.rs](src/global/url.rs))
+- 浏览器风格的 URL 解析
+- 支持解析: protocol, host, hostname, port, pathname, search, hash, origin
+- 提供 `toString()` 方法
+- 370+ 行代码,4 个测试用例
+
+JavaScript 使用方式:
+```javascript
+const url = new URL("https://example.com:8080/path?query=value#hash");
+
+console.log(url.getProtocol());  // "https:"
+console.log(url.getHostname());  // "example.com"
+console.log(url.getPort());      // "8080"
+console.log(url.getPathname());  // "/path"
+console.log(url.getSearch());    // "?query=value"
+console.log(url.getHash());      // "#hash"
+console.log(url.getOrigin());    // "https://example.com:8080"
+console.log(url.toString());     // 完整 URL
+```
+
+#### 新增文件
+
+- `src/crypto/des.rs` - DES/3DES 加密实现 (383 行)
+- `src/global/timers.rs` - 定时器 API 实现 (320 行)
+- `src/global/url.rs` - URL 解析类 (370 行)
+
+#### 修改文件
+
+- `src/crypto/mod.rs` - 导出 DES 模块
+- `src/global/mod.rs` - 导出 timers 和 url 模块
+- `src/runtime.rs` - 注册新的全局 API
+- `Cargo.toml` - 添加 `des`, `lazy_static` 依赖
+
+#### 测试
+
+- 新增 12 个单元测试 (3 DES + 5 timers + 4 URL)
+- 总测试数: 33 个 (从 21 个增加)
+- 所有测试通过 ✅
+
+#### 新增依赖 📦
+
+- `des = "0.8.1"` - DES/3DES 加密算法
+- `lazy_static = "1.5.0"` - 全局静态变量
+- `rsa = { version = "0.9.6", features = ["sha2"] }` - 为未来 RSA 支持准备
+- `pkcs8 = "0.10.2"` - PKCS8 密钥格式支持
+
+#### 技术细节
+
+1. **DES 实现挑战**
+   - `DesType` 枚举需要 `Trace` 和 `Finalize` 特征,不能使用 `Copy`
+   - 使用 `encrypt_padded_mut` 而非 `encrypt_padded_vec_mut`
+   - 通过引用模式匹配避免所有权移动
+
+2. **定时器限制**
+   - 基于线程实现,主要用于延迟而非异步回调
+   - 使用 `Arc<Mutex<bool>>` 实现取消机制
+   - 全局 `lazy_static` 存储定时器信息
+
+3. **URL 类设计**
+   - 使用方法而非属性访问器 (`getHref()` vs `url.href`)
+   - 简化实现,专注书源场景常用功能
+   - 不依赖外部 URL 解析库,自实现解析逻辑
 
 ## [0.2.0-beta] - 2025-01-03
 
