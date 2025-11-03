@@ -1,3 +1,7 @@
+// 核心模块
+pub mod core;
+
+// 功能模块
 mod crypto;
 mod env;
 mod global;
@@ -5,11 +9,18 @@ mod prototype;
 mod request;
 mod runtime;
 mod scraper;
+
 use boa_engine::{js_string, Context, JsNativeError, JsResult, JsValue, Source};
 use boa_runtime::{Console, Logger};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::runtime::Runtime;
+
+// 导出核心类型
+pub use self::core::{
+    error, get_pool, intern, BookCoreError, BookResult, CryptoError, NetworkError, ParseError,
+    StringPool,
+};
 
 use crate::runtime::init_runtime;
 

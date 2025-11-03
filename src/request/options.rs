@@ -13,6 +13,8 @@ pub struct Options {
     pub form: Option<Value>,
     pub json: Option<Value>,
     pub gbk: bool,
+    /// 缓存 TTL (秒),如果设置则启用缓存
+    pub cache_ttl: Option<u64>,
 }
 
 // 设置 options 的默认值
@@ -26,6 +28,7 @@ impl Default for Options {
             form: None,
             json: None,
             gbk: false,
+            cache_ttl: None,
         }
     }
 }
@@ -84,6 +87,12 @@ impl Options {
         if !query_value.is_null_or_undefined() {
             query = query_value.to_json(ctx).ok().flatten();
         }
+        // 生成缓存TTL
+        let mut cache_ttl = None;
+        let cache_ttl_value = obj.get(js_string!("cacheTtl"), ctx)?;
+        if cache_ttl_value.is_number() {
+            cache_ttl = Some(cache_ttl_value.as_number().unwrap() as u64);
+        }
 
         Ok(Options {
             headers: headers,
@@ -93,6 +102,7 @@ impl Options {
             form: form,
             json: json,
             gbk: gbk,
+            cache_ttl: cache_ttl,
         })
     }
 }

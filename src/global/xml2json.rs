@@ -1,7 +1,10 @@
 use boa_engine::{js_error, js_string, Context, JsArgs, JsValue, NativeFunction};
 use quickxml_to_serde::{xml_string_to_json, Config, NullValue};
 
-pub fn regist_xml_to_json(ctx: &mut Context) {
+/// 注册 xml2Json 函数到 JavaScript 全局对象
+///
+/// 将 XML 字符串转换为 JSON 对象
+pub fn register_xml_to_json(ctx: &mut Context) {
     let function = NativeFunction::from_fn_ptr(|_this, args, context| {
         let xml = args.get_or_undefined(0);
         if xml.is_null_or_undefined() {
@@ -16,4 +19,10 @@ pub fn regist_xml_to_json(ctx: &mut Context) {
     });
     ctx.register_global_builtin_callable(js_string!("xml2Json"), 1, function)
         .expect("Failed to register xmlToJson");
+}
+
+// 向后兼容的别名
+#[deprecated(since = "0.2.0", note = "Use `register_xml_to_json` instead")]
+pub fn regist_xml_to_json(ctx: &mut Context) {
+    register_xml_to_json(ctx);
 }

@@ -4,9 +4,9 @@ use boa_engine::{
     class::Class, js_string, Context, JsData, JsNativeError, JsResult, JsValue, NativeFunction,
 };
 use boa_gc::{Finalize, Trace};
-use reqwest::{Client, Method};
+use reqwest::Method;
 
-use super::{charset::decode_response, options::Options};
+use super::{cache, charset::decode_response, client_pool, options::Options};
 
 #[derive(Debug, Trace, Finalize, JsData)]
 struct JReqwest {}
@@ -17,6 +17,22 @@ impl JReqwest {
         let options = args.get(1).unwrap();
         let options = Options::from_js_value(options, ctx).unwrap_or_default();
         let gbk = options.gbk;
+
+        // 检查是否启用缓存 (仅对 GET 请求有效)
+        let cache_enabled = method == Method::GET && options.cache_ttl.is_some();
+        let cache_key = if cache_enabled {
+            Some(cache::generate_cache_key(method.as_str(), &url))
+        } else {
+            None
+        };
+
+        // 如果启用了缓存,尝试从缓存获取
+        if let Some(ref key) = cache_key {
+            if let Some(cached_response) = cache::get_cache().get(key) {
+                // 缓存命中,直接返回缓存的响应
+                return JsValue::from_json(&serde_json::from_str(&cached_response).unwrap(), ctx);
+            }
+        }
         if let Some(query) = options.query.clone() {
             if gbk {
                 let mut query_vec = Vec::new();
@@ -33,12 +49,13 @@ impl JReqwest {
                 }
             }
         }
-        let client = Client::builder()
-            .danger_accept_invalid_certs(true)
-            .use_rustls_tls()
-            .timeout(Duration::from_secs(options.timeout.as_secs()))
-            .build()
-            .expect("Failed to create reqwest client");
+        // 使用连接池客户端,如果需要自定义超时则创建新客户端
+        let default_timeout = Duration::from_secs(30);
+        let client = if options.timeout != default_timeout {
+            client_pool::create_client_with_timeout(options.timeout)
+        } else {
+            client_pool::get_client().clone()
+        };
         let mut request = client.request(method, url);
         if !options.headers.is_empty() {
             request = request.headers(options.headers);
@@ -108,6 +125,19 @@ impl JReqwest {
                 })
             })
         })?;
+
+        // 如果启用了缓存,将响应保存到缓存
+        if let Some(key) = cache_key {
+            if let Some(ttl) = options.cache_ttl {
+                // 将响应对象转换为 JsValue 再转为 JSON 字符串并缓存
+                let response_value = JsValue::from(response.clone());
+                if let Ok(Some(json_value)) = response_value.to_json(ctx) {
+                    if let Ok(json_str) = serde_json::to_string(&json_value) {
+                        cache::get_cache().set(key, json_str, Duration::from_secs(ttl));
+                    }
+                }
+            }
+        }
 
         Ok(response.into())
     }

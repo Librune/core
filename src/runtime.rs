@@ -2,12 +2,14 @@ use boa_engine::{js_string, property::Attribute};
 use boa_runtime::Console;
 
 use crate::{
+    core::string_pool::common::init_common_strings,
     crypto::{aes::define_aes_crypto, hmac::define_hmac},
     env::env::regist_envs,
     global::{
-        rand_str::regist_rand_str,
-        uuid::{regist_is_uuid, regist_uuid},
-        xml2json::regist_xml_to_json,
+        encoding::register_encoding_apis,
+        rand_str::register_rand_str,
+        uuid::{register_is_uuid, register_uuid},
+        xml2json::register_xml_to_json,
     },
     prototype::{object::extend_object, string::extend_string},
     request::jreqwest::define_request,
@@ -16,6 +18,8 @@ use crate::{
 };
 
 pub fn init_runtime(core: &mut BookCore) {
+    // 初始化常用字符串池
+    init_common_strings();
     let context = &mut core.context;
     let console = Console::init(context);
     context
@@ -25,16 +29,25 @@ pub fn init_runtime(core: &mut BookCore) {
             Attribute::WRITABLE | Attribute::CONFIGURABLE,
         )
         .expect("Failed to register console");
-    // define_envs(context);
-    regist_envs(context);
+    // 注册自定义类
     define_request(context);
     define_scraper(context);
     define_aes_crypto(context);
     define_hmac(context);
-    regist_xml_to_json(context);
-    regist_rand_str(context);
-    regist_uuid(context);
-    regist_is_uuid(context);
+
+    // 注册环境变量方法
+    regist_envs(context);
+
+    // 注册全局工具函数
+    register_uuid(context);
+    register_is_uuid(context);
+    register_xml_to_json(context);
+    register_rand_str(context);
+
+    // 注册浏览器兼容 API
+    register_encoding_apis(context);
+
+    // 扩展 JavaScript 原型
     extend_string(context);
     extend_object(context);
 }
