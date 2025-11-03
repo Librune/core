@@ -205,7 +205,7 @@ impl BookCore {
             .global_object()
             .delete_property_or_throw(js_string!("console"), context)
             .expect("Failed to delete console");
-        Console::register_with_logger(context, logger).expect("Failed to register custom logger");
+        Console::register_with_logger(logger, context).expect("Failed to register custom logger");
         context
         .eval(Source::from_bytes("const console_log = console.log;console.log = function(...args) { const string_args =  args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg); console_log(...string_args);  };"))
         .expect("Failed to eval console");
@@ -224,7 +224,7 @@ impl BookCore {
                     if value.is_null_or_undefined() {
                         serde_json::from_value::<T>(serde_json::Value::Null).unwrap()
                     } else {
-                        let value = value.to_json(ctx).unwrap();
+                        let value = value.to_json(ctx).unwrap().unwrap_or(serde_json::Value::Null);
                         serde_json::from_value::<T>(value).unwrap()
                     }
                 })
@@ -266,7 +266,7 @@ impl BookCore {
 
     pub fn get_env(&mut self, key: String) -> Result<Value, String> {
         self.call_func("getEnv".to_string(), vec![json!(key)])
-            .map(|value| value.to_json(&mut self.context).unwrap())
+            .map(|value| value.to_json(&mut self.context).unwrap().unwrap_or(serde_json::Value::Null))
             .map_err(|err| err.to_string())
     }
 

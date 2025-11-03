@@ -1,7 +1,7 @@
 use base64::prelude::BASE64_STANDARD;
 use base64::prelude::*;
 use boa_engine::{
-    class::Class, js_error, js_string, Context, JsData, JsNativeError, JsObject, JsResult, JsValue,
+    class::Class, js_error, js_string, Context, JsData, JsNativeError, JsResult, JsValue,
     NativeFunction,
 };
 use boa_gc::{Finalize, Trace};
@@ -82,13 +82,14 @@ impl Hmac {
     }
 
     fn update(this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
-        let options = this
-            .as_object()
-            .and_then(JsObject::downcast_ref::<Self>)
-            .ok_or_else(|| {
-                JsNativeError::typ()
-                    .with_message("get Hmac.prototype.encrypt called with invalid `this`")
-            })?;
+        let obj = this.as_object().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Hmac.prototype.encrypt called with invalid `this`")
+        })?;
+        let options = obj.downcast_ref::<Self>().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Hmac.prototype.encrypt called with invalid `this`")
+        })?;
         let origin_text = args.get(0).unwrap().to_string(ctx)?.to_std_string_escaped();
         let plaintext = origin_text.as_bytes();
         let hmac_key = options.key.as_bytes();

@@ -37,7 +37,7 @@ fn regist_to_query(ctx: &mut Context) -> Result<bool, JsError> {
             ));
         });
         result.pop();
-        Ok(JsValue::String(js_string!(result)))
+        Ok(JsValue::new(js_string!(result)))
     });
     register(ctx, "toQuery", func)
 }

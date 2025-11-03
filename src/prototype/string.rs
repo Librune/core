@@ -28,7 +28,7 @@ fn register_to_gbk(ctx: &mut Context) -> Result<bool, JsError> {
         let this_str = this.to_string(context)?.to_std_string_escaped();
         let (bytes, _encoding_used, _had_errors) = GBK.encode(this_str.as_str());
         let encoded_param = percent_encode(&bytes, percent_encoding::NON_ALPHANUMERIC).to_string();
-        Ok(JsValue::String(encoded_param.into()))
+        Ok(JsValue::new(js_string!(encoded_param)))
     });
     register(ctx, "toGbk", func)
 }
@@ -39,7 +39,7 @@ fn register_to_base64(context: &mut Context) -> Result<bool, JsError> {
         let this_str = this.to_string(context)?.to_std_string_escaped();
         // 使用 base64 编码
         let result = BASE64.encode(this_str.as_bytes());
-        Ok(JsValue::String(result.into()))
+        Ok(JsValue::new(js_string!(result)))
     });
     register(context, "toBase64", func)
 }
@@ -55,7 +55,7 @@ fn register_to_md5(context: &mut Context) -> Result<bool, JsError> {
             .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>();
-        Ok(JsValue::String(digest.into()))
+        Ok(JsValue::new(js_string!(digest)))
     });
     register(context, "toMd5", func)
 }
@@ -66,7 +66,7 @@ fn register_to_ascii(context: &mut Context) -> Result<bool, JsError> {
         let this_str = this.to_string(context)?.to_std_string_escaped();
         let digest = this_str.as_str().bytes().collect::<Vec<u8>>();
         Ok(JsValue::from(JsArray::from_iter(
-            digest.iter().map(|b| JsValue::Integer(*b as i32)),
+            digest.iter().map(|b| JsValue::new(*b as i32)),
             context,
         )))
     });
@@ -113,7 +113,7 @@ fn register_to_sha(context: &mut Context) -> Result<bool, JsError> {
         };
         if to_string.is_null_or_undefined() || !to_string.to_boolean() {
             Ok(JsValue::new(JsArray::from_iter(
-                result.iter().map(|e| JsValue::Integer(*e as i32)),
+                result.iter().map(|e| JsValue::new(*e as i32)),
                 context,
             )))
         } else {
@@ -121,7 +121,7 @@ fn register_to_sha(context: &mut Context) -> Result<bool, JsError> {
             .iter()
             .map(|b| format!("{:02x}", b))
             .collect::<String>();
-        Ok(JsValue::String(digest.into()))
+        Ok(JsValue::new(js_string!(digest)))
         }
     });
     register(context, "toSha", func)

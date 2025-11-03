@@ -19,7 +19,7 @@ impl JScraper {
             if let Some(scraper) = object.downcast_ref::<JScraper>() {
                 let document = Html::parse_document(&scraper.html);
                 let text = document.root_element().text().collect::<String>();
-                return Ok(JsValue::String(text.into()));
+                return Ok(JsValue::new(js_string!(text)));
             }
         }
         Err(JsNativeError::typ()

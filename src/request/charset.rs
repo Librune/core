@@ -63,7 +63,7 @@ pub async fn decode_response(response: Response, ctx: &mut Context) -> JsResult<
 
     obj.set(
         js_string!("headers"),
-        JsValue::Object(headers_obj),
+        JsValue::new(headers_obj),
         true,
         ctx,
     )?;

@@ -3,7 +3,7 @@ use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit, StreamCipher};
 use base64::prelude::BASE64_STANDARD;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use boa_engine::{
-    class::Class, js_error, js_string, Context, JsData, JsNativeError, JsObject, JsResult, JsValue,
+    class::Class, js_error, js_string, Context, JsData, JsNativeError, JsResult, JsValue,
     NativeFunction,
 };
 use boa_gc::{Finalize, Trace};
@@ -293,13 +293,14 @@ impl Aes {
     }
 
     fn encrypt(this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
-        let options = this
-            .as_object()
-            .and_then(JsObject::downcast_ref::<Self>)
-            .ok_or_else(|| {
-                JsNativeError::typ()
-                    .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
-            })?;
+        let obj = this.as_object().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
+        })?;
+        let options = obj.downcast_ref::<Self>().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
+        })?;
         let origin_text = args.get(0).unwrap().to_string(ctx)?.to_std_string_escaped();
         let plaintext = origin_text.as_bytes();
         let pt_len = plaintext.len();
@@ -455,13 +456,14 @@ impl Aes {
     // }
 
     fn decrypt(this: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue> {
-        let options = this
-            .as_object()
-            .and_then(JsObject::downcast_ref::<Self>)
-            .ok_or_else(|| {
-                JsNativeError::typ()
-                    .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
-            })?;
+        let obj = this.as_object().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
+        })?;
+        let options = obj.downcast_ref::<Self>().ok_or_else(|| {
+            JsNativeError::typ()
+                .with_message("get Decrypt.prototype.decrypt called with invalid `this`")
+        })?;
         let encrypted_data = args.get(0).unwrap().to_string(ctx)?.to_std_string_escaped();
         let mut encrypted_bytes = match options.encoding {
             Encoding::Base64 => BASE64_STANDARD.decode(&encrypted_data).unwrap(),

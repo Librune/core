@@ -12,7 +12,7 @@ pub fn regist_xml_to_json(ctx: &mut Context) {
         let json = xml_string_to_json(xml_str.to_owned(), &conf).expect("Malformed XML");
         let js_value = JsValue::from_json(&json, context)?;
         let js_object = js_value.as_object().unwrap();
-        Ok(JsValue::Object(js_object.clone()))
+        Ok(JsValue::new(js_object.clone()))
     });
     ctx.register_global_builtin_callable(js_string!("xml2Json"), 1, function)
         .expect("Failed to register xmlToJson");

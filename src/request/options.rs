@@ -70,19 +70,19 @@ impl Options {
         let mut json = None;
         let json_value = obj.get(js_string!("json"), ctx)?;
         if !json_value.is_null_or_undefined() {
-            json = json_value.to_json(ctx).ok();
+            json = json_value.to_json(ctx).ok().flatten();
         }
         // 生成请求form
         let mut form = None;
         let form_value = obj.get(js_string!("form"), ctx)?;
         if !form_value.is_null_or_undefined() {
-            form = form_value.to_json(ctx).ok();
+            form = form_value.to_json(ctx).ok().flatten();
         }
         // 生成请求query
         let mut query = None;
         let query_value = obj.get(js_string!("query"), ctx)?;
         if !query_value.is_null_or_undefined() {
-            query = query_value.to_json(ctx).ok();
+            query = query_value.to_json(ctx).ok().flatten();
         }
 
         Ok(Options {
