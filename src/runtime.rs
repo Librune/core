@@ -3,11 +3,12 @@ use boa_runtime::Console;
 
 use crate::{
     core::string_pool::common::init_common_strings,
-    crypto::{aes::define_aes_crypto, hmac::define_hmac},
+    crypto::{aes::define_aes_crypto, des::define_des_crypto, hmac::define_hmac},
     env::env::regist_envs,
     global::{
         encoding::register_encoding_apis,
         rand_str::register_rand_str,
+        timers::register_timer_apis,
         uuid::{register_is_uuid, register_uuid},
         xml2json::register_xml_to_json,
     },
@@ -33,6 +34,7 @@ pub fn init_runtime(core: &mut BookCore) {
     define_request(context);
     define_scraper(context);
     define_aes_crypto(context);
+    define_des_crypto(context);
     define_hmac(context);
 
     // 注册环境变量方法
@@ -46,6 +48,7 @@ pub fn init_runtime(core: &mut BookCore) {
 
     // 注册浏览器兼容 API
     register_encoding_apis(context);
+    register_timer_apis(context);
 
     // 扩展 JavaScript 原型
     extend_string(context);
